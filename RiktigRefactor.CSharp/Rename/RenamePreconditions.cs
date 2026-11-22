@@ -102,14 +102,15 @@ public static class RenamePreconditions
     }
 
     /// <summary>
-    /// Refuses to rename a member that a record's synthesized ToString prints by name, or a positional parameter that declares one.
+    /// Refuses to rename a record type or a member that its synthesized ToString prints by name, or a positional parameter that declares one.
     /// The printed name is a string the rename would change.
     /// </summary>
     public static RefusalReason? FindRecordPrintedMember(ISymbol symbol)
     {
         var isPrintedMember = symbol is (IPropertySymbol or IFieldSymbol) and { IsStatic: false, ContainingType.IsRecord: true };
         var isPositionalParameter = symbol is IParameterSymbol { ContainingSymbol: IMethodSymbol { MethodKind: MethodKind.Constructor, ContainingType.IsRecord: true } };
-        return isPrintedMember || isPositionalParameter
+        var isRecordType = symbol is INamedTypeSymbol { IsRecord: true };
+        return isPrintedMember || isPositionalParameter || isRecordType
             ? new RefusalReason(
                 RefusalCodes.StringNamesSymbol,
                 $"The record's ToString prints the name `{symbol.Name}`, so renaming it would change that output.",

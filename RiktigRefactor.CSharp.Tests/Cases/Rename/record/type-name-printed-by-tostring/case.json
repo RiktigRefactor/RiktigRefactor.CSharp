@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Price"
+  },
+  "refuse": "string-names-symbol",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec §15.16 Records"
+  ],
+  "notes": "A record's synthesized ToString starts with the type's name, so renaming the type changes the output."
+}
