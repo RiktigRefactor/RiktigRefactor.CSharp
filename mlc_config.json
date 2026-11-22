@@ -1,8 +1,10 @@
 {
-  "replacementPatterns": [
+  "ignorePatterns": [
     {
-      "pattern": "^/",
-      "replacement": "{{BASEURL}}/"
+      "pattern": "^/"
+    },
+    {
+      "pattern": "^https://github.com/RiktigRefactor/riktigrefactor.csharp/actions/"
     }
   ]
 }
