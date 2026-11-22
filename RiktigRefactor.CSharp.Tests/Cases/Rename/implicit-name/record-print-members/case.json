@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "PrintMembers"
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a715.16 Records"
+  ],
+  "notes": "A record's ToString calls a user-declared PrintMembers in place of the synthesized one, without naming it."
+}

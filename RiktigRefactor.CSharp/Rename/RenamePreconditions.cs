@@ -11,11 +11,12 @@ public static class RenamePreconditions
 {
     const string CallerArgumentExpressionAttribute = "System.Runtime.CompilerServices.CallerArgumentExpressionAttribute";
 
-    static readonly SyntaxKind[] ForEachKinds = [SyntaxKind.ForEachStatement, SyntaxKind.ForEachVariableStatement];
+    static readonly SyntaxKind[] ForEachKinds = [SyntaxKind.ForEachStatement, SyntaxKind.ForEachVariableStatement, SyntaxKind.SpreadElement];
     static readonly SyntaxKind[] DisposeKinds = [SyntaxKind.UsingStatement, SyntaxKind.LocalDeclarationStatement, .. ForEachKinds];
-    static readonly SyntaxKind[] AwaitKinds = [SyntaxKind.AwaitExpression];
+    static readonly SyntaxKind[] AwaitKinds = [SyntaxKind.AwaitExpression, .. DisposeKinds];
+    static readonly SyntaxKind[] RecordKinds = [SyntaxKind.RecordDeclaration, SyntaxKind.RecordStructDeclaration];
     static readonly SyntaxKind[] QueryKinds = [SyntaxKind.QueryExpression];
-    static readonly SyntaxKind[] IndexingKinds = [SyntaxKind.ListPattern, SyntaxKind.IndexExpression, SyntaxKind.RangeExpression, SyntaxKind.ElementAccessExpression, SyntaxKind.SlicePattern];
+    static readonly SyntaxKind[] IndexingKinds = [SyntaxKind.SpreadElement, SyntaxKind.ListPattern, SyntaxKind.IndexExpression, SyntaxKind.RangeExpression, SyntaxKind.ElementAccessExpression, SyntaxKind.SlicePattern];
     static readonly SyntaxKind[] DeconstructKinds = [SyntaxKind.ForEachVariableStatement, SyntaxKind.RecursivePattern, SyntaxKind.SimpleAssignmentExpression, SyntaxKind.ParenthesizedVariableDesignation];
     static readonly SyntaxKind[] InterpolationKinds = [SyntaxKind.InterpolatedStringExpression];
 
@@ -34,7 +35,12 @@ public static class RenamePreconditions
         ["IsCompleted"] = AwaitKinds,
         ["OnCompleted"] = AwaitKinds,
         ["UnsafeOnCompleted"] = AwaitKinds,
-        ["Deconstruct"] = DeconstructKinds,
+        ["Deconstruct"] = [.. DeconstructKinds, .. RecordKinds],
+        ["Equals"] = RecordKinds,
+        ["GetHashCode"] = RecordKinds,
+        ["ToString"] = RecordKinds,
+        ["PrintMembers"] = RecordKinds,
+        ["EqualityContract"] = RecordKinds,
         ["Select"] = QueryKinds,
         ["SelectMany"] = QueryKinds,
         ["Where"] = QueryKinds,
@@ -132,6 +138,7 @@ public static class RenamePreconditions
     /// <summary>
     /// Refuses when a member is renamed from or to a name that the language looks up implicitly
     /// (collection initializers, foreach, await, deconstruction, query expressions, and the like) and the workspace uses that construct.
+    /// Records count too: a user-declared Equals, GetHashCode, ToString, PrintMembers, or Deconstruct replaces the one the compiler would synthesize.
     /// Those lookups have no name in the source, so the binding verifier can't see them change.
     /// </summary>
     public static async Task<RefusalReason?> FindPatternBasedUseAsync(

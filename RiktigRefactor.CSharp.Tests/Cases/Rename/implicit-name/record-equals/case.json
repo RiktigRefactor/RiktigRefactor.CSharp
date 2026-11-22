@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Equals"
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a715.16 Records"
+  ],
+  "notes": "A record uses a user-declared Equals(R) in place of the synthesized one, and == calls it without naming it."
+}
