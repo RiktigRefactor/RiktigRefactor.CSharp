@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Cut"
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a718.4 Implicit Index and Range support"
+  ],
+  "notes": "A range index calls Slice by name, so renaming it breaks the range without a visible reference."
+}

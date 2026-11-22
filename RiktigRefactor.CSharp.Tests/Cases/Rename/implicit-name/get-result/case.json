@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Result"
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a712.9.8.3 Run-time evaluation of await expressions"
+  ],
+  "notes": "await calls the awaiter's GetResult by name, so renaming it breaks the await without a visible reference."
+}

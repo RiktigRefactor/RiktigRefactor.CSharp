@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Close"
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a713.14 The using statement"
+  ],
+  "notes": "A using statement on a ref struct calls Dispose by name, so renaming it breaks the using without a visible reference."
+}

@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Literal"
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a712.8.3 Interpolated string expressions"
+  ],
+  "notes": "An interpolated string handler's AppendLiteral is called by name, so renaming it breaks the interpolated string without a visible reference."
+}

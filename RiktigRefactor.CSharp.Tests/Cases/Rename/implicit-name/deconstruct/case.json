@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Deconstruct"
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a712.21.2 Simple assignment"
+  ],
+  "notes": "Deconstruction looks up Deconstruct by name and prefers an instance method over an extension, so the renamed method would capture it."
+}
