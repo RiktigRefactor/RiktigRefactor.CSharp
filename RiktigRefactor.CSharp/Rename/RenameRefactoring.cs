@@ -52,7 +52,8 @@ public static class RenameRefactoring
             return RefactoringResult.Refuse(earlyRefusal);
         }
 
-        var preprocessorRefusal = await FindPreprocessorConflictAsync(solution, oldName, unescapedNewName, cancellationToken).ConfigureAwait(false);
+        var preprocessorRefusal = await FindPreprocessorConflictAsync(solution, oldName, unescapedNewName, cancellationToken).ConfigureAwait(false)
+            ?? await RenamePreconditions.FindPatternBasedUseAsync(solution, target, oldName, unescapedNewName, cancellationToken).ConfigureAwait(false);
         if (preprocessorRefusal is not null)
         {
             return RefactoringResult.Refuse(preprocessorRefusal);

@@ -11,6 +11,50 @@ public static class RenamePreconditions
 {
     const string CallerArgumentExpressionAttribute = "System.Runtime.CompilerServices.CallerArgumentExpressionAttribute";
 
+    static readonly SyntaxKind[] ForEachKinds = [SyntaxKind.ForEachStatement, SyntaxKind.ForEachVariableStatement];
+    static readonly SyntaxKind[] DisposeKinds = [SyntaxKind.UsingStatement, SyntaxKind.LocalDeclarationStatement, .. ForEachKinds];
+    static readonly SyntaxKind[] AwaitKinds = [SyntaxKind.AwaitExpression];
+    static readonly SyntaxKind[] QueryKinds = [SyntaxKind.QueryExpression];
+    static readonly SyntaxKind[] IndexingKinds = [SyntaxKind.ListPattern, SyntaxKind.IndexExpression, SyntaxKind.RangeExpression, SyntaxKind.ElementAccessExpression, SyntaxKind.SlicePattern];
+    static readonly SyntaxKind[] DeconstructKinds = [SyntaxKind.ForEachVariableStatement, SyntaxKind.RecursivePattern, SyntaxKind.SimpleAssignmentExpression, SyntaxKind.ParenthesizedVariableDesignation];
+    static readonly SyntaxKind[] InterpolationKinds = [SyntaxKind.InterpolatedStringExpression];
+
+    static readonly Dictionary<string, SyntaxKind[]> PatternNames = new(StringComparer.Ordinal)
+    {
+        ["Add"] = [SyntaxKind.CollectionInitializerExpression, SyntaxKind.CollectionExpression],
+        ["GetEnumerator"] = ForEachKinds,
+        ["GetAsyncEnumerator"] = ForEachKinds,
+        ["MoveNext"] = ForEachKinds,
+        ["MoveNextAsync"] = ForEachKinds,
+        ["Current"] = ForEachKinds,
+        ["Dispose"] = DisposeKinds,
+        ["DisposeAsync"] = DisposeKinds,
+        ["GetAwaiter"] = AwaitKinds,
+        ["GetResult"] = AwaitKinds,
+        ["IsCompleted"] = AwaitKinds,
+        ["OnCompleted"] = AwaitKinds,
+        ["UnsafeOnCompleted"] = AwaitKinds,
+        ["Deconstruct"] = DeconstructKinds,
+        ["Select"] = QueryKinds,
+        ["SelectMany"] = QueryKinds,
+        ["Where"] = QueryKinds,
+        ["Join"] = QueryKinds,
+        ["GroupJoin"] = QueryKinds,
+        ["OrderBy"] = QueryKinds,
+        ["OrderByDescending"] = QueryKinds,
+        ["ThenBy"] = QueryKinds,
+        ["ThenByDescending"] = QueryKinds,
+        ["GroupBy"] = QueryKinds,
+        ["Cast"] = QueryKinds,
+        ["Length"] = IndexingKinds,
+        ["Count"] = IndexingKinds,
+        ["Slice"] = IndexingKinds,
+        ["Substring"] = IndexingKinds,
+        ["GetPinnableReference"] = [SyntaxKind.FixedStatement],
+        ["AppendLiteral"] = InterpolationKinds,
+        ["AppendFormatted"] = InterpolationKinds,
+    };
+
     /// <summary>
     /// Refuses when the member overrides or implements a member declared outside the workspace.
     /// Renaming it would silently stop it from overriding or implementing that member.
@@ -84,6 +128,52 @@ public static class RenamePreconditions
 
         return null;
     }
+
+    /// <summary>
+    /// Refuses when a member is renamed from or to a name that the language looks up implicitly
+    /// (collection initializers, foreach, await, deconstruction, query expressions, and the like) and the workspace uses that construct.
+    /// Those lookups have no name in the source, so the binding verifier can't see them change.
+    /// </summary>
+    public static async Task<RefusalReason?> FindPatternBasedUseAsync(
+        Solution solution,
+        ISymbol symbol,
+        string oldName,
+        string newName,
+        CancellationToken cancellationToken)
+    {
+        if (symbol.Kind is not (SymbolKind.Method or SymbolKind.Property or SymbolKind.Field or SymbolKind.Event))
+        {
+            return null;
+        }
+
+        var isPatternName = IsPatternName(oldName) || IsPatternName(newName);
+        if (!isPatternName)
+        {
+            return null;
+        }
+
+        foreach (var document in solution.Projects.SelectMany(project => project.Documents))
+        {
+            var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+            var use = root?.DescendantNodes().FirstOrDefault(node => UsesPatternName(node, oldName) || UsesPatternName(node, newName));
+            if (use is not null)
+            {
+                return new RefusalReason(
+                    RefusalCodes.BindingWouldChange,
+                    $"`{oldName}` or `{newName}` is looked up implicitly by a language construct, which can't be verified.",
+                    Ranges.FromSpan(use.SyntaxTree, use.Span),
+                    null);
+            }
+        }
+
+        return null;
+    }
+
+    static bool IsPatternName(string name) => PatternNames.ContainsKey(name);
+
+    static bool UsesPatternName(SyntaxNode node, string name)
+        => PatternNames.TryGetValue(name, out var kinds) && kinds.Contains(node.Kind())
+            && (node is not LocalDeclarationStatementSyntax declaration || declaration.UsingKeyword != default);
 
     static bool NamesUsedForBinding(SyntaxNode node, string oldName, string newName) => node switch
     {
