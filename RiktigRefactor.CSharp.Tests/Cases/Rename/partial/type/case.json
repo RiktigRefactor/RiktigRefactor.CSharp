@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "Gadget"
+  },
+  "spec": [
+    "C# spec \u00a715.2.7 Partial declarations"
+  ],
+  "notes": "Every part of the partial type is renamed."
+}

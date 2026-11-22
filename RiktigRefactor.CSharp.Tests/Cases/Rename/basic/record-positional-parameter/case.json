@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "Horizontal"
+  },
+  "spec": [
+    "C# spec \u00a715.15 Record types"
+  ],
+  "notes": "The positional parameter and the property it generates are the same symbol for rename purposes."
+}

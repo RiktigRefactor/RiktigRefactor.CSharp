@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Look"
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a712.8.10.3 Extension method invocations"
+  ],
+  "notes": "After the rename the instance method Box.Look wins over the extension method."
+}

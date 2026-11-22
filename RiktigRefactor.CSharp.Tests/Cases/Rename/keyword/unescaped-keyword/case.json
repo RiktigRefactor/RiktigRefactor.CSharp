@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "class"
+  },
+  "refuse": "invalid-identifier",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a76.4.4 Keywords"
+  ],
+  "notes": "The tool does not guess that the caller meant @class."
+}

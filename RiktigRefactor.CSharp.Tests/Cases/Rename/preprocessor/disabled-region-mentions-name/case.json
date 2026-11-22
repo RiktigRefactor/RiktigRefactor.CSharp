@@ -1,0 +1,10 @@
+{
+  "options": {
+    "newName": "counter"
+  },
+  "refuse": "preprocessor-region",
+  "spec": [
+    "C# spec \u00a76.5.4 Conditional compilation directives"
+  ],
+  "notes": "The disabled region uses the name, and it would not be renamed or verified. Not an edge case for the naive check: the program is only wrong when NEVER_DEFINED is defined."
+}

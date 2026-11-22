@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "Gadget"
+  },
+  "spec": [
+    "C# spec \u00a715.11 Instance constructors"
+  ],
+  "notes": "Renaming from a constructor declaration renames the type."
+}

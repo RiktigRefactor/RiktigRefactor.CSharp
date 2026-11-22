@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "Measure"
+  },
+  "spec": [
+    "C# spec \u00a718.6 Interface implementations"
+  ],
+  "notes": "Renaming the implementation also renames the interface member, otherwise the class would stop implementing it."
+}

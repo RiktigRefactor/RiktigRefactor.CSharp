@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "Compute"
+  },
+  "spec": [
+    "C# spec \u00a7D Documentation comments"
+  ],
+  "notes": "A cref in a documentation comment is a reference and is renamed with the symbol. Comment text is not."
+}

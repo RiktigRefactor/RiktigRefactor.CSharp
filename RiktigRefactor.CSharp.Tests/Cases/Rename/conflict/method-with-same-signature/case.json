@@ -1,0 +1,10 @@
+{
+  "options": {
+    "newName": "B"
+  },
+  "refuse": "conflicting-declaration",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a715.6 Methods"
+  ]
+}

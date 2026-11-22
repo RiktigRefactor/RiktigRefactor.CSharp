@@ -1,0 +1,10 @@
+{
+  "options": {
+    "newName": "@class"
+  },
+  "spec": [
+    "C# spec \u00a76.4.3 Identifiers",
+    "C# spec \u00a76.4.4 Keywords"
+  ],
+  "notes": "An explicit @ escape makes a keyword a valid identifier; the output keeps the escape."
+}

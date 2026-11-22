@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "Gadget"
+  },
+  "spec": [
+    "C# spec \u00a712.8.17.2 Object creation expressions"
+  ],
+  "notes": "Renaming from a constructor call renames the type."
+}

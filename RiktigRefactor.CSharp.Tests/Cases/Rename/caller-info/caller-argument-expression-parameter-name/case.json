@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "candidate"
+  },
+  "refuse": "string-names-symbol",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a722.5.6 Caller-info attributes"
+  ],
+  "notes": "The attribute names the parameter in a string, which Roslyn does not update. The expression would silently stop being captured."
+}

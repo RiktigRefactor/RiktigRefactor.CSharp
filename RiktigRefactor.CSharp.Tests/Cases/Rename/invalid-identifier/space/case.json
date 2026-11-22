@@ -1,0 +1,10 @@
+{
+  "options": {
+    "newName": "not valid"
+  },
+  "refuse": "invalid-identifier",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a76.4.3 Identifiers"
+  ]
+}

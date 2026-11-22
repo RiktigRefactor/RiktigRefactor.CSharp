@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Bar"
+  },
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a77.7 Scopes",
+    "C# spec \u00a712.8.4 Simple names"
+  ],
+  "notes": "After the rename, `Bar.Make()` would bind to the field Bar and silently call a different method that compiles fine."
+}

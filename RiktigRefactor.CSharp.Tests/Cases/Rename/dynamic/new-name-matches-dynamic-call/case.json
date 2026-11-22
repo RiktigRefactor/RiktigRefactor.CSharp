@@ -1,0 +1,11 @@
+{
+  "options": {
+    "newName": "Greet"
+  },
+  "refuse": "dynamic-access-possible",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec \u00a712.3.3 Dynamic binding"
+  ],
+  "notes": "After the rename an existing dynamic call by the new name would start succeeding."
+}

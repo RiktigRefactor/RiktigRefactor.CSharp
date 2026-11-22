@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "sum"
+  },
+  "spec": [
+    "C# spec \u00a77.7 Scopes"
+  ],
+  "notes": "Simple rename of a local from its declaration."
+}

@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "FullName"
+  },
+  "spec": [
+    "C# spec \u00a715.7 Properties",
+    "C# spec \u00a711.2.5 Property pattern"
+  ]
+}
