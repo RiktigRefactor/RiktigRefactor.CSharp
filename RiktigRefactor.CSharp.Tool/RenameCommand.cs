@@ -32,6 +32,12 @@ public static class RenameCommand
             await standardError.WriteLineAsync(exception.Message).ConfigureAwait(false);
             return ExitError;
         }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Without this, System.CommandLine's default handler exits with 1, which means "refused".
+            await standardError.WriteLineAsync($"Internal error: {exception}").ConfigureAwait(false);
+            return ExitError;
+        }
     }
 
     static async Task<int> RunCoreAsync(RenameArguments arguments, TextWriter standardOutput, TextWriter standardError, CancellationToken cancellationToken)
