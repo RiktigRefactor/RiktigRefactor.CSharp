@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RiktigRefactor.CSharp\RiktigRefactor.CSharp.csproj" />
+    <ProjectReference Include="..\RiktigRefactor.CSharp.Tool\RiktigRefactor.CSharp.Tool.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>RiktigRefactor.CSharp.Tool</AssemblyName>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>riktig-cs</ToolCommandName>
+    <PackageId>RiktigRefactor.CSharp.Tool</PackageId>
+    <Description>Behavior-preserving C# refactorings. Refuses when it cannot prove a change is safe.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" />
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RiktigRefactor.CSharp\RiktigRefactor.CSharp.csproj" />
+  </ItemGroup>
+
+</Project>

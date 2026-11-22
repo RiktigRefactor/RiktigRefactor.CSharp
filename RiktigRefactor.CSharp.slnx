@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="RiktigRefactor.CSharp.Tests/RiktigRefactor.CSharp.Tests.csproj" />
+  <Project Path="RiktigRefactor.CSharp.Tool/RiktigRefactor.CSharp.Tool.csproj" />
   <Project Path="RiktigRefactor.CSharp/RiktigRefactor.CSharp.csproj" />
 </Solution>
