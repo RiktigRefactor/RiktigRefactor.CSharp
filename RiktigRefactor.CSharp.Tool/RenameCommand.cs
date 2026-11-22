@@ -130,14 +130,20 @@ public static class RenameCommand
             .SelectMany(changes => changes.GetChangedDocuments(onlyGetDocumentsWithTextChanges: true))
             .Select(id => (oldSolution.GetDocument(id)!, newSolution.GetDocument(id)!));
 
+    /// <summary>Prepares every file before writing any, so that a file that can't be rewritten leaves the workspace untouched.</summary>
     static async Task ApplyAsync(Solution oldSolution, Solution newSolution, CancellationToken cancellationToken)
     {
+        var writes = new Dictionary<string, (string Text, Encoding Encoding)>(StringComparer.Ordinal);
         foreach (var (oldDocument, newDocument) in ChangedDocuments(oldSolution, newSolution))
         {
             var path = oldDocument.FilePath ?? throw new ArgumentException($"{oldDocument.Name} has no file path.");
-            var encoding = DetectEncoding(path);
             var text = await newDocument.GetTextAsync(cancellationToken).ConfigureAwait(false);
-            await File.WriteAllTextAsync(path, text.ToString(), encoding, cancellationToken).ConfigureAwait(false);
+            writes[path] = (text.ToString(), DetectEncoding(path));
+        }
+
+        foreach (var (path, (text, encoding)) in writes)
+        {
+            await File.WriteAllTextAsync(path, text, encoding, CancellationToken.None).ConfigureAwait(false);
         }
     }
 

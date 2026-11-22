@@ -83,6 +83,22 @@ public class RenameCommandTests : IDisposable
     }
 
     [Fact]
+    public async Task ApplyWritesNothingWhenAnyFileCannotBeRewritten()
+    {
+        WriteProject();
+        var latin1Comment = new byte[] { (byte)'/', (byte)'/', (byte)' ', 0xE9, (byte)'\n' };
+        File.WriteAllBytes(PathOf("Program.cs"), [.. System.Text.Encoding.UTF8.GetBytes(ProgramSource), .. latin1Comment]);
+        File.WriteAllBytes(PathOf("A.cs"), System.Text.Encoding.UTF8.GetBytes("static class A\n{\n    static int Use() => Calculator.Double(1);\n}\n"));
+
+        var (exitCode, _, error) = await RunAsync(newName: "Twice", apply: true, json: false);
+
+        Assert.Equal(RenameCommand.ExitError, exitCode);
+        Assert.Contains("UTF-8", error);
+        Assert.Equal(CalculatorSource, File.ReadAllText(PathOf("Calculator.cs")));
+        Assert.Contains("Double", File.ReadAllText(PathOf("A.cs")));
+    }
+
+    [Fact]
     public async Task UnknownFileExitsWithTwo()
     {
         WriteProject();
