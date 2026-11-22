@@ -46,6 +46,7 @@ public static class RenameRefactoring
 
         var earlyRefusal = RenamePreconditions.FindExternalHierarchy(solution, target)
             ?? RenamePreconditions.FindParameterNamedInString(target, unescapedNewName)
+            ?? RenamePreconditions.FindRecordPrintedMember(target)
             ?? await RenamePreconditions.FindDynamicAccessAsync(solution, oldName, unescapedNewName, cancellationToken).ConfigureAwait(false);
         if (earlyRefusal is not null)
         {
