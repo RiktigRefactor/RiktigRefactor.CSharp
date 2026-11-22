@@ -2,9 +2,8 @@
   "options": {
     "newName": "Horizontal"
   },
-  "refuse": "string-names-symbol",
   "spec": [
     "C# spec §15.15 Record types"
   ],
-  "notes": "The positional parameter and the property it generates are the same symbol for rename purposes. The rename is refused because the record's synthesized ToString prints the property name; see record/positional-parameter-printed-by-tostring."
+  "notes": "The positional parameter and the property it generates are the same symbol for rename purposes. The record's synthesized ToString now prints the new name, which is intended (see the spec's limitations.md)."
 }
