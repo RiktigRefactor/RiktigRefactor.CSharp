@@ -1,0 +1,8 @@
+{
+  "options": {
+    "newName": "Doubled"
+  },
+  "spec": [
+    "C# 14 extension members"
+  ]
+}

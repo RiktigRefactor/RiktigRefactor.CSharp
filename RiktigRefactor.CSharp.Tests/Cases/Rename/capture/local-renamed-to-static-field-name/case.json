@@ -1,0 +1,10 @@
+{
+  "options": {
+    "newName": "F"
+  },
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec §12.8.4 Simple names"
+  ],
+  "notes": "The static field must be qualified with its type once a local of the same name shadows it."
+}

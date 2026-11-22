@@ -1,0 +1,9 @@
+{
+  "options": {
+    "newName": "Compute"
+  },
+  "spec": [
+    "C# spec §15.6.9 Partial methods"
+  ],
+  "notes": "Renaming the implementing declaration renames the defining one too."
+}
