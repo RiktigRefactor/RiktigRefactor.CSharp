@@ -11,6 +11,7 @@ public static class Edits
     /// Computes the edits that turn <paramref name="oldSolution"/> into <paramref name="newSolution"/>.
     /// Roslyn's text differ may split a renamed identifier (<c>Double</c> to <c>Twice</c> becomes <c>Doubl</c> to <c>Twic</c>),
     /// so each edit is widened to cover whole tokens.
+    /// A file linked into several projects appears once per project; its identical edits are reported once.
     /// </summary>
     public static async Task<IReadOnlyList<FileEdit>> ComputeAsync(Solution oldSolution, Solution newSolution, CancellationToken cancellationToken)
     {
@@ -32,7 +33,7 @@ public static class Edits
             }
         }
 
-        return edits;
+        return [.. edits.Distinct()];
     }
 
     static List<(TextSpan Span, string NewText)> WidenToTokens(SourceText oldText, SyntaxNode oldRoot, IEnumerable<TextChange> changes)

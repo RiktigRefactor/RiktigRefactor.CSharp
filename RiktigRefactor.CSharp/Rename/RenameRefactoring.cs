@@ -88,6 +88,12 @@ public static class RenameRefactoring
             return RefactoringResult.Refuse(bindingChange with { Suggestion = "Choose a different name." });
         }
 
+        var fileRefusal = await FindDivergingLinkedFileAsync(newSolution, cancellationToken).ConfigureAwait(false);
+        if (fileRefusal is not null)
+        {
+            return RefactoringResult.Refuse(fileRefusal);
+        }
+
         var edits = await Edits.ComputeAsync(solution, newSolution, cancellationToken).ConfigureAwait(false);
         var warnings = await FindStringsMatchingNameAsync(solution, oldName, cancellationToken).ConfigureAwait(false);
         return new RefactoringResult(RefactoringStatus.Success, edits, warnings, []) { NewSolution = newSolution };
@@ -162,6 +168,34 @@ public static class RenameRefactoring
         }
 
         return (symbol, null);
+    }
+
+    /// <summary>Refuses when copies of a file linked into several projects would end up with different text, which can't be written back.</summary>
+    static async Task<RefusalReason?> FindDivergingLinkedFileAsync(Solution newSolution, CancellationToken cancellationToken)
+    {
+        var documentsByPath = newSolution.Projects.SelectMany(project => project.Documents)
+            .Where(document => document.FilePath is not null)
+            .GroupBy(document => document.FilePath!, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1);
+        foreach (var linked in documentsByPath)
+        {
+            var texts = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var document in linked)
+            {
+                texts.Add((await document.GetTextAsync(cancellationToken).ConfigureAwait(false)).ToString());
+            }
+
+            if (texts.Count > 1)
+            {
+                return new RefusalReason(
+                    RefusalCodes.BindingWouldChange,
+                    $"`{linked.Key}` is shared by several projects, and the rename would change it differently in each.",
+                    null,
+                    null);
+            }
+        }
+
+        return null;
     }
 
     static async Task<RefusalReason?> FindPreprocessorConflictAsync(

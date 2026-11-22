@@ -140,6 +140,22 @@ public class RenameWorkspaceTests
         Assert.Equal(RefactoringStatus.Success, result.Status);
     }
 
+    [Fact]
+    public async Task EditsALinkedFileOnce()
+    {
+        var solution = new AdhocWorkspace().CurrentSolution;
+        var first = AddProject(ref solution, "First");
+        var second = AddProject(ref solution, "Second");
+        var text = "class C { public int /*|*/M() => 1; public int N() => M(); }".Replace("/*|*/", "");
+        solution = solution.AddDocument(DocumentId.CreateNewId(first), "Shared.cs", SourceText.From(text), filePath: "/src/Shared.cs");
+        solution = solution.AddDocument(DocumentId.CreateNewId(second), "Shared.cs", SourceText.From(text), filePath: "/src/Shared.cs");
+
+        var result = await RenameAtAsync(solution, "Shared.cs", "M", "Renamed");
+
+        Assert.Equal(RefactoringStatus.Success, result.Status);
+        Assert.Equal(2, result.Edits.Count);
+    }
+
     static async Task<RefactoringResult> RenameAtAsync(Solution solution, string documentName, string name, string newName)
     {
         var document = solution.Projects.SelectMany(project => project.Documents).First(document => document.Name == documentName);
