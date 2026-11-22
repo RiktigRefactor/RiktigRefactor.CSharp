@@ -128,8 +128,8 @@ public class BindingVerifier
             return SymbolIdentity.Describe(this._oldSolution, oldSymbol);
         }
 
-        var sourceLocation = definition.Locations.FirstOrDefault(location => location.IsInSource);
-        var oldDocumentId = sourceLocation?.SourceTree is { } tree ? this._oldSolution.GetDocumentId(tree) : null;
+        var sourceLocation = SymbolIdentity.PreferredSourceLocation(this._oldSolution, definition);
+        var oldDocumentId = SymbolIdentity.RegularDocumentId(this._oldSolution, sourceLocation?.SourceTree);
         if (sourceLocation is null || oldDocumentId is null)
         {
             return SymbolIdentity.Describe(this._oldSolution, oldSymbol);

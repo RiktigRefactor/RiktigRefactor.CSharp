@@ -21,7 +21,7 @@ public static class SymbolIdentity
             return "global-namespace";
         }
 
-        var sourceLocation = definition.Locations.FirstOrDefault(location => location.IsInSource);
+        var sourceLocation = PreferredSourceLocation(solution, definition);
         var documentId = sourceLocation?.SourceTree is { } tree ? solution.GetDocumentId(tree) : null;
         if (sourceLocation is not null && documentId is not null)
         {
@@ -30,6 +30,21 @@ public static class SymbolIdentity
 
         return $"metadata:{definition.Kind}:{definition.ContainingAssembly?.Identity.GetDisplayName()}:{definition.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}:{definition.GetDocumentationCommentId()}";
     }
+
+    /// <summary>
+    /// The first location in a regular document, or else the first in a source-generated one.
+    /// A partial type can be declared in both, and only regular documents can be mapped across the change.
+    /// </summary>
+    public static Location? PreferredSourceLocation(Solution solution, ISymbol definition)
+    {
+        var sourceLocations = definition.Locations.Where(location => location.IsInSource).ToList();
+        return sourceLocations.FirstOrDefault(location => RegularDocumentId(solution, location.SourceTree) is not null)
+            ?? sourceLocations.FirstOrDefault();
+    }
+
+    /// <summary>The document containing <paramref name="tree"/>, unless it is missing or source-generated.</summary>
+    public static DocumentId? RegularDocumentId(Solution solution, SyntaxTree? tree)
+        => tree is not null && solution.GetDocument(tree) is { } document and not SourceGeneratedDocument ? document.Id : null;
 
     public static string SourceId(SymbolKind kind, DocumentId documentId, int start)
         => $"source:{kind}:{documentId.Id}:{start}";

@@ -53,7 +53,8 @@ public static class RenameRefactoring
         }
 
         var preprocessorRefusal = await FindPreprocessorConflictAsync(solution, oldName, unescapedNewName, cancellationToken).ConfigureAwait(false)
-            ?? await RenamePreconditions.FindPatternBasedUseAsync(solution, target, oldName, unescapedNewName, cancellationToken).ConfigureAwait(false);
+            ?? await RenamePreconditions.FindPatternBasedUseAsync(solution, target, oldName, unescapedNewName, cancellationToken).ConfigureAwait(false)
+            ?? await RenamePreconditions.FindGeneratedCodeUseAsync(solution, oldName, unescapedNewName, cancellationToken).ConfigureAwait(false);
         if (preprocessorRefusal is not null)
         {
             return RefactoringResult.Refuse(preprocessorRefusal);
@@ -72,6 +73,12 @@ public static class RenameRefactoring
                 isDeclarationConflict ? RefusalCodes.ConflictingDeclaration : RefusalCodes.WouldIntroduceErrors,
                 $"Renaming `{oldName}` to `{unescapedNewName}` would introduce compile errors ({string.Join(", ", newErrors.Select(error => error.Id).Distinct())}) in {string.Join(", ", newErrors.Select(error => error.File).Distinct())}.",
                 suggestion: "Choose a different name.");
+        }
+
+        var generatedOutputChange = await RenamePreconditions.FindGeneratedOutputChangeAsync(solution, newSolution, cancellationToken).ConfigureAwait(false);
+        if (generatedOutputChange is not null)
+        {
+            return RefactoringResult.Refuse(generatedOutputChange);
         }
 
         var renamedSymbols = await FindRenamedSymbolsAsync(solution, target, unescapedNewName, cancellationToken).ConfigureAwait(false);

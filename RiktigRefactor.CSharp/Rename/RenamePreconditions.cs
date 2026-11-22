@@ -169,6 +169,72 @@ public static class RenamePreconditions
         return null;
     }
 
+    /// <summary>
+    /// Refuses when source-generated code mentions the old or new name, or uses a construct that looks either up implicitly.
+    /// The rename can't edit generated code, and the binding verifier only sees regular documents.
+    /// </summary>
+    public static async Task<RefusalReason?> FindGeneratedCodeUseAsync(
+        Solution solution,
+        string oldName,
+        string newName,
+        CancellationToken cancellationToken)
+    {
+        foreach (var project in solution.Projects)
+        {
+            foreach (var generated in await project.GetSourceGeneratedDocumentsAsync(cancellationToken).ConfigureAwait(false))
+            {
+                var root = await generated.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+                var mentionsName = root?.DescendantTokens(descendIntoTrivia: true)
+                    .Any(token => token.IsKind(SyntaxKind.IdentifierToken) && IsOneOf(token.ValueText, oldName, newName)) ?? false;
+                var usesPatternName = root?.DescendantNodes().Any(node => UsesPatternName(node, oldName) || UsesPatternName(node, newName)) ?? false;
+                if (mentionsName || usesPatternName)
+                {
+                    return new RefusalReason(
+                        RefusalCodes.BindingWouldChange,
+                        $"Source-generated code ({generated.HintName}) uses `{oldName}` or `{newName}`, and generated code can't be renamed or verified.",
+                        null,
+                        null);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Refuses when the rename changes what the source generators produce, since that code is outside the verified edits.</summary>
+    public static async Task<RefusalReason?> FindGeneratedOutputChangeAsync(Solution oldSolution, Solution newSolution, CancellationToken cancellationToken)
+    {
+        foreach (var oldProject in oldSolution.Projects)
+        {
+            var newProject = newSolution.GetProject(oldProject.Id);
+            var oldGenerated = await GeneratedTextsAsync(oldProject, cancellationToken).ConfigureAwait(false);
+            var newGenerated = newProject is null ? [] : await GeneratedTextsAsync(newProject, cancellationToken).ConfigureAwait(false);
+            var isUnchanged = oldGenerated.Count == newGenerated.Count
+                && oldGenerated.All(pair => newGenerated.TryGetValue(pair.Key, out var text) && text == pair.Value);
+            if (!isUnchanged)
+            {
+                return new RefusalReason(
+                    RefusalCodes.BindingWouldChange,
+                    $"The rename changes the source-generated code of project {oldProject.Name}, which can't be verified.",
+                    null,
+                    null);
+            }
+        }
+
+        return null;
+    }
+
+    static async Task<Dictionary<string, string>> GeneratedTextsAsync(Project project, CancellationToken cancellationToken)
+    {
+        var texts = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var generated in await project.GetSourceGeneratedDocumentsAsync(cancellationToken).ConfigureAwait(false))
+        {
+            texts[generated.FilePath ?? generated.HintName] = (await generated.GetTextAsync(cancellationToken).ConfigureAwait(false)).ToString();
+        }
+
+        return texts;
+    }
+
     static bool IsPatternName(string name) => PatternNames.ContainsKey(name);
 
     static bool UsesPatternName(SyntaxNode node, string name)
