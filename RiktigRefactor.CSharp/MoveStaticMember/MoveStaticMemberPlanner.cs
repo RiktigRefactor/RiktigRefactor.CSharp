@@ -155,7 +155,7 @@ public class MoveStaticMemberPlanner
             return Refuse(RefusalCodes.InvalidTarget, $"`{this._member.Name}` is already in `{this._target.Name}`.", location, null);
         }
 
-        if (IsGenericOrInGeneric(this._source) || IsGenericOrInGeneric(this._target))
+        if (MoveGenerics.IsGenericOrInGeneric(this._source) || MoveGenerics.IsGenericOrInGeneric(this._target))
         {
             return Refuse(RefusalCodes.GenericType, "The member's type or the target is generic, or nested in a generic type; each constructed type has its own static state and type parameters.", location, null);
         }
@@ -180,19 +180,6 @@ public class MoveStaticMemberPlanner
             ?? FindInitializationProblem()
             ?? FindPreprocessorDirectiveInDeclaration()
             ?? await FindDisabledTextAsync(this._solution, this._member.Name, this._cancellationToken).ConfigureAwait(false);
-    }
-
-    static bool IsGenericOrInGeneric(INamedTypeSymbol type)
-    {
-        for (var current = type; current is not null; current = current.ContainingType)
-        {
-            if (current.IsGenericType)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     RefusalReason? FindNameCollision()

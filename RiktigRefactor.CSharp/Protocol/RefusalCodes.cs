@@ -43,5 +43,9 @@ public static class RefusalCodes
     public const string InitializationOrder = "initialization-order";
     public const string LockOnType = "lock-on-type";
     public const string Inaccessible = "inaccessible";
+    public const string NotStaticMethod = "not-static-method";
+    public const string InvalidReceiver = "invalid-receiver";
+    public const string ReceiverWritten = "receiver-written";
+    public const string EvaluationOrder = "evaluation-order";
     public const string InternalVerificationFailed = "internal-verification-failed";
 }
