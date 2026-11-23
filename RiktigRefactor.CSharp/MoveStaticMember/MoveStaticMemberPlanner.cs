@@ -25,7 +25,6 @@ public class MoveStaticMemberPlanner
     readonly MemberDeclarationSyntax _declaration;
     readonly DocumentId _sourceDocument;
     readonly TypeDeclarationSyntax _targetDeclaration;
-    readonly DocumentId _targetDocument;
     readonly bool _checkPreconditions;
     readonly CancellationToken _cancellationToken;
     readonly List<SourceEdit> _edits = [];
@@ -41,7 +40,6 @@ public class MoveStaticMemberPlanner
         this._declaration = declaration;
         this._sourceDocument = solution.GetDocumentId(declaration.SyntaxTree)!;
         this._targetDeclaration = targetDeclaration;
-        this._targetDocument = solution.GetDocumentId(targetDeclaration.SyntaxTree)!;
         this._checkPreconditions = checkPreconditions;
         this._cancellationToken = cancellationToken;
     }
@@ -370,154 +368,14 @@ public class MoveStaticMemberPlanner
         return null;
     }
 
-    /// <summary>Qualifies names in the declaration that are found through the source type's scope, which the target doesn't have.</summary>
     async Task PlanQualifiedNamesInDeclarationAsync()
     {
         var model = (await this._solution.GetDocument(this._sourceDocument)!.GetSemanticModelAsync(this._cancellationToken).ConfigureAwait(false))!;
-        foreach (var name in this._declaration.DescendantNodes(descendIntoTrivia: true).OfType<SimpleNameSyntax>())
-        {
-            if (IsQualified(name) || model.GetSymbolInfo(name, this._cancellationToken).Symbol is not { } symbol)
-            {
-                continue;
-            }
-
-            var definition = SymbolIdentity.Normalize(symbol);
-            if (SymbolEqualityComparer.Default.Equals(definition, this._member) || (!symbol.IsStatic && symbol is not INamedTypeSymbol))
-            {
-                continue;
-            }
-
-            if (symbol.ContainingType is { } containing && IsSourceScope(containing))
-            {
-                Insert(this._sourceDocument, name.SpanStart, new TypePiece(containing.ToMinimalDisplayString(model, this._declaration.SpanStart), containing), new LiteralPiece("."));
-            }
-        }
-    }
-
-    static bool IsQualified(SimpleNameSyntax name) => name.Parent switch
-    {
-        MemberAccessExpressionSyntax memberAccess => memberAccess.Name == name,
-        QualifiedNameSyntax qualified => qualified.Right == name,
-        AliasQualifiedNameSyntax aliased => aliased.Name == name,
-        MemberBindingExpressionSyntax => true,
-        NameMemberCrefSyntax { Parent: QualifiedCrefSyntax } => true,
-        NameColonSyntax or NameEqualsSyntax => true,
-        _ => false,
-    };
-
-    /// <summary>The source type, its base types and its containing types: the scopes an unqualified name in the member can be found through.</summary>
-    bool IsSourceScope(INamedTypeSymbol type)
-    {
-        var definition = type.OriginalDefinition;
-        for (var outer = this._source; outer is not null; outer = outer.ContainingType)
-        {
-            for (var current = outer; current is not null; current = current.BaseType)
-            {
-                if (SymbolEqualityComparer.Default.Equals(current.OriginalDefinition, definition))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        this._edits.AddRange(SourceScopeNames.Qualify(model, this._sourceDocument, this._declaration, this._source, symbol => SymbolEqualityComparer.Default.Equals(SymbolIdentity.Normalize(symbol), this._member), this._cancellationToken));
     }
 
     async Task PlanMoveAsync()
-    {
-        var sourceText = await this._solution.GetDocument(this._sourceDocument)!.GetTextAsync(this._cancellationToken).ConfigureAwait(false);
-        var targetText = await this._solution.GetDocument(this._targetDocument)!.GetTextAsync(this._cancellationToken).ConfigureAwait(false);
-        var newline = targetText.ToString().Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
-
-        var fullSpan = this._declaration.FullSpan;
-        var firstLineStart = FirstNonBlankLineStart(sourceText, fullSpan);
-        var sourceIndent = Indentation(sourceText, firstLineStart);
-        var targetIndent = TargetMemberIndentation(targetText);
-        ReindentLines(sourceText, TextSpan.FromBounds(firstLineStart, fullSpan.End), sourceIndent, targetIndent);
-
-        var moved = new List<SourcePiece>();
-        var closeBrace = this._targetDeclaration.CloseBraceToken;
-        var closeBraceLine = targetText.Lines.GetLineFromPosition(closeBrace.SpanStart);
-        var braceStartsItsLine = string.IsNullOrWhiteSpace(targetText.ToString(TextSpan.FromBounds(closeBraceLine.Start, closeBrace.SpanStart)));
-        if (!braceStartsItsLine || this._targetDeclaration.Members.Count > 0)
-        {
-            moved.Add(new LiteralPiece(newline));
-        }
-
-        moved.Add(new CopyPiece(this._sourceDocument, TextSpan.FromBounds(firstLineStart, fullSpan.End)));
-        if (!sourceText.ToString(fullSpan).EndsWith('\n'))
-        {
-            moved.Add(new LiteralPiece(newline));
-        }
-
-        if (!braceStartsItsLine)
-        {
-            moved.Add(new LiteralPiece(Indentation(targetText, targetText.Lines.GetLineFromPosition(this._targetDeclaration.SpanStart).Start)));
-        }
-
-        this._edits.Add(SourceEdit.Delete(this._sourceDocument, fullSpan));
-        var whitespaceBeforeBrace = TextSpan.FromBounds(closeBrace.GetPreviousToken().Span.End, closeBrace.SpanStart);
-        var insertedSpan = braceStartsItsLine ? new TextSpan(closeBraceLine.Start, 0) : whitespaceBeforeBrace;
-        this._edits.Add(SourceEdit.Replace(this._targetDocument, insertedSpan, [.. moved]));
-    }
-
-    static int FirstNonBlankLineStart(SourceText text, TextSpan span)
-    {
-        var line = text.Lines.GetLineFromPosition(span.Start);
-        var start = Math.Max(line.Start, span.Start);
-        while (line.LineNumber + 1 < text.Lines.Count && line.End < span.End && string.IsNullOrWhiteSpace(text.ToString(TextSpan.FromBounds(start, line.End))))
-        {
-            line = text.Lines[line.LineNumber + 1];
-            start = line.Start;
-        }
-
-        return start;
-    }
-
-    static string Indentation(SourceText text, int lineStart)
-    {
-        var end = lineStart;
-        while (end < text.Length && text[end] is ' ' or '\t')
-        {
-            end++;
-        }
-
-        return text.ToString(TextSpan.FromBounds(lineStart, end));
-    }
-
-    string TargetMemberIndentation(SourceText targetText)
-    {
-        if (this._targetDeclaration.Members.Count > 0)
-        {
-            var first = this._targetDeclaration.Members[0];
-            return Indentation(targetText, targetText.Lines.GetLineFromPosition(first.SpanStart).Start);
-        }
-
-        return Indentation(targetText, targetText.Lines.GetLineFromPosition(this._targetDeclaration.SpanStart).Start) + "    ";
-    }
-
-    /// <summary>Changes each line's indentation, except lines that continue a multi-line string, whose whitespace is part of the string.</summary>
-    void ReindentLines(SourceText text, TextSpan span, string sourceIndent, string targetIndent)
-    {
-        if (sourceIndent == targetIndent)
-        {
-            return;
-        }
-
-        var root = this._declaration.SyntaxTree.GetRoot(this._cancellationToken);
-        foreach (var line in text.Lines.Where(line => span.Contains(line.Start) && line.Start < line.End))
-        {
-            var token = root.FindToken(line.Start, findInsideTrivia: true);
-            var isInsideToken = token.Span.Start < line.Start && line.Start < token.Span.End;
-            var isInsideInterpolatedString = token.Parent?.AncestorsAndSelf().Any(node => node is InterpolatedStringExpressionSyntax interpolated && interpolated.SpanStart < line.Start) == true;
-            if (isInsideToken || isInsideInterpolatedString || !text.ToString(line.Span).StartsWith(sourceIndent, StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            this._edits.Add(SourceEdit.Replace(this._sourceDocument, new TextSpan(line.Start, sourceIndent.Length), new LiteralPiece(targetIndent)));
-        }
-    }
+        => this._edits.AddRange(await DeclarationMove.PlanAsync(this._solution, this._declaration, this._targetDeclaration, this._cancellationToken).ConfigureAwait(false));
 
     TypePiece TargetType(SemanticModel model, int position) => new(this._target.ToMinimalDisplayString(model, position), this._target);
 
