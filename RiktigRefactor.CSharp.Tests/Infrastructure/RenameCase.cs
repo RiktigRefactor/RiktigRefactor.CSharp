@@ -1,8 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 using RiktigRefactor.CSharp.Protocol;
 using RiktigRefactor.CSharp.Rename;
-using RiktigRefactor.CSharp.Verification;
 
 namespace RiktigRefactor.CSharp.Tests.Infrastructure;
 
@@ -23,9 +21,6 @@ public record RenameCase(
     bool NaiveMustFail = false,
     string? NaiveFailureContains = null)
 {
-    /// <summary>Set to 1 to write the produced output into each case's expected directory. Review the diff before committing.</summary>
-    const string WriteExpectedVariable = "RIKTIG_WRITE_EXPECTED";
-
     public static RenameCase InDirectory(string caseDirectory) => new(caseDirectory);
 
     public RenameCase RenameTo(string newName) => this with { NewName = newName };
@@ -62,10 +57,7 @@ public record RenameCase(
 
         Assert.True(result.Status == RefactoringStatus.Success, string.Join("\n", result.Reasons));
         var outputFiles = await TestWorkspace.ReadFilesAsync(result.NewSolution!);
-        if (Environment.GetEnvironmentVariable(WriteExpectedVariable) == "1")
-        {
-            WriteExpected(name, outputFiles);
-        }
+        CaseFiles.WriteExpectedIfRequested(name, outputFiles);
 
         var expectedFiles = testCase.ExpectedFiles ?? throw new InvalidOperationException($"{name}: expected directory is missing.");
         Assert.Equal(expectedFiles.Keys.Order(StringComparer.Ordinal), outputFiles.Keys.Order(StringComparer.Ordinal));
@@ -78,7 +70,7 @@ public record RenameCase(
         Assert.Equal(outputFiles.Where(file => file.Value != inputFiles[file.Key]).Select(file => file.Key).Order(StringComparer.Ordinal), result.Edits.Select(edit => edit.File).Distinct().Order(StringComparer.Ordinal));
         foreach (var (file, text) in outputFiles)
         {
-            Assert.Equal(text, ApplyEdits(inputFiles[file], result.Edits.Where(edit => edit.File == file)));
+            Assert.Equal(text, CaseFiles.ApplyEdits(inputFiles[file], result.Edits.Where(edit => edit.File == file)));
         }
 
         await AssertNaiveFailsIfRequiredAsync(solution, documentId, selection, newName);
@@ -97,26 +89,6 @@ public record RenameCase(
         if (NaiveFailureContains is not null)
         {
             Assert.Contains(NaiveFailureContains, naiveFailure);
-        }
-    }
-
-    static string ApplyEdits(string text, IEnumerable<FileEdit> edits)
-    {
-        var sourceText = SourceText.From(text);
-        var changes = edits.Select(edit => new TextChange(
-            TextSpan.FromBounds(Ranges.ToOffset(sourceText, edit.Start), Ranges.ToOffset(sourceText, edit.End)),
-            edit.NewText));
-        return sourceText.WithChanges(changes).ToString();
-    }
-
-    static void WriteExpected(string name, IReadOnlyDictionary<string, string> outputFiles)
-    {
-        var directory = TestCase.ExpectedDirectory(name);
-        foreach (var (file, text) in outputFiles)
-        {
-            var path = Path.Combine(directory, file);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, text);
         }
     }
 }
