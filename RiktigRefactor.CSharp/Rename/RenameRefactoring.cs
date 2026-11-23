@@ -69,6 +69,14 @@ public static class RenameRefactoring
         }
 
         (solution, target) = withExplicitNames;
+        if (await ImplicitDllImportEntryPoints.MakeExplicitAsync(solution, target, cancellationToken).ConfigureAwait(false) is not { } withExplicitEntryPoint)
+        {
+            return RefactoringResult.Refuse(
+                RefusalCodes.InternalVerificationFailed,
+                "Writing the DllImport entry point explicitly changed the entry point.");
+        }
+
+        (solution, target) = withExplicitEntryPoint;
         var errorsBefore = await ErrorCountsAsync(solution, cancellationToken).ConfigureAwait(false);
         var options = new SymbolRenameOptions(RenameOverloads: false, RenameInStrings: false, RenameInComments: false, RenameFile: false);
         var newSolution = await Renamer.RenameSymbolAsync(solution, target, options, unescapedNewName, cancellationToken).ConfigureAwait(false);
