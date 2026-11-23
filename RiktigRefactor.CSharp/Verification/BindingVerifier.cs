@@ -136,11 +136,11 @@ public class BindingVerifier
         }
 
         var oldId = SymbolIdentity.Describe(this._oldSolution, oldSymbol);
-        var expectedName = this._renamedSymbolIdsToNewNames.GetValueOrDefault(oldId) ?? definition.Name;
+        var expectedName = this._renamedSymbolIdsToNewNames.GetValueOrDefault(oldId) ?? SymbolIdentity.DeclaringTokenText(definition);
         var map = await GetChangeMapAsync(oldDocumentId, cancellationToken).ConfigureAwait(false);
         var newToken = map.FindNewToken(sourceLocation.SourceSpan.Start, expectedName);
         return newToken is { } token
-            ? SymbolIdentity.SourceId(definition.Kind, oldDocumentId, token.SpanStart)
+            ? SymbolIdentity.SourceId(definition, oldDocumentId, token.SpanStart)
             : $"missing-declaration:{oldId}";
     }
 
