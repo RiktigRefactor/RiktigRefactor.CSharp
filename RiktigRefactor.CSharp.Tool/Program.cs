@@ -52,7 +52,29 @@ extractIifeCommand.SetAction((parseResult, cancellationToken) => ExtractIifeComm
     Console.Error,
     cancellationToken));
 
-var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand, extractIifeCommand };
+var receiverNameOption = new Option<string?>("--receiver-name") { Description = "The name of the new receiver parameter. Defaults to the type's name in camel case." };
+var makeMethodStaticCommand = new Command("make-method-static", "Turn the instance method at the cursor into a static method that takes the receiver as its first parameter. Exits 0 on success, 1 when refused, 2 on error.")
+{
+    workspaceOption,
+    fileOption,
+    atOption,
+    receiverNameOption,
+    applyOption,
+    jsonOption,
+};
+makeMethodStaticCommand.SetAction((parseResult, cancellationToken) => MakeMethodStaticCommand.RunAsync(
+    new MakeMethodStaticArguments(
+        parseResult.GetRequiredValue(workspaceOption),
+        parseResult.GetRequiredValue(fileOption),
+        parseResult.GetRequiredValue(atOption),
+        parseResult.GetValue(receiverNameOption),
+        parseResult.GetValue(applyOption),
+        parseResult.GetValue(jsonOption)),
+    Console.Out,
+    Console.Error,
+    cancellationToken));
+
+var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand, extractIifeCommand, makeMethodStaticCommand };
 var parseResult = rootCommand.Parse(args);
 var exitCode = await parseResult.InvokeAsync();
 return parseResult.Errors.Count > 0 ? RefactoringCommand.ExitError : exitCode;
