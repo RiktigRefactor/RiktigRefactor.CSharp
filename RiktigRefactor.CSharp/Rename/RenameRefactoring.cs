@@ -80,6 +80,7 @@ public static class RenameRefactoring
         var errorsBefore = await ErrorCountsAsync(solution, cancellationToken).ConfigureAwait(false);
         var options = new SymbolRenameOptions(RenameOverloads: false, RenameInStrings: false, RenameInComments: false, RenameFile: false);
         var newSolution = await Renamer.RenameSymbolAsync(solution, target, options, unescapedNewName, cancellationToken).ConfigureAwait(false);
+        newSolution = await CapturedStaticMemberReferences.QualifyAsync(solution, newSolution, target, newName, cancellationToken).ConfigureAwait(false);
 
         var errorsAfter = await ErrorCountsAsync(newSolution, cancellationToken).ConfigureAwait(false);
         var newErrors = errorsAfter.Where(pair => pair.Value > errorsBefore.GetValueOrDefault(pair.Key)).Select(pair => pair.Key).ToList();

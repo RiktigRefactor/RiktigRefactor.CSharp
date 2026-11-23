@@ -132,6 +132,36 @@ public class CaptureRenameCaseTests
             .NaiveShouldFail()
             .RunAsync();
 
+    // A lambda parameter may shadow the field, so Roslyn does not qualify the reference; the tool qualifies it with the type.
+    [Fact]
+    [Spec("C# spec §7.6 Scopes")]
+    [Spec("C# spec §12.22 Anonymous function expressions")]
+    public Task StaticFieldOfGenericTypeRenamedToLambdaParameterName()
+        => RenameCase.InDirectory("capture/static-field-of-generic-type-renamed-to-lambda-parameter-name")
+            .RenameTo("value")
+            .NaiveShouldFail()
+            .RunAsync();
+
+    // A lambda parameter may shadow the field, so Roslyn does not qualify the reference; the tool qualifies it with the type.
+    [Fact]
+    [Spec("C# spec §7.6 Scopes")]
+    [Spec("C# spec §12.22 Anonymous function expressions")]
+    public Task StaticFieldRenamedToLambdaParameterName()
+        => RenameCase.InDirectory("capture/static-field-renamed-to-lambda-parameter-name")
+            .RenameTo("value")
+            .NaiveShouldFail()
+            .RunAsync();
+
+    // The reference to the field would be captured by the local `total`, so it is qualified with the type.
+    [Fact]
+    [Spec("C# spec §7.6 Scopes")]
+    [Spec("C# spec §12.8.4 Simple names")]
+    public Task StaticFieldRenamedToLocalName()
+        => RenameCase.InDirectory("capture/static-field-renamed-to-local-name")
+            .RenameTo("total")
+            .NaiveShouldFail()
+            .RunAsync();
+
     // `value` is the implicit parameter of the setter.
     [Fact]
     [Spec("C# spec §15.7.3 Accessors")]
