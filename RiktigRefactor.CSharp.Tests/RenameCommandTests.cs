@@ -66,6 +66,8 @@ public class RenameCommandTests : IDisposable
         var edits = document.RootElement.GetProperty("edits");
         Assert.Equal(2, edits.GetArrayLength());
         Assert.Equal("Twice", edits[0].GetProperty("newText").GetString());
+        Assert.Equal(Path.GetDirectoryName(PathOf("Sample.csproj")), document.RootElement.GetProperty("workspaceRoot").GetString());
+        Assert.All(edits.EnumerateArray(), edit => Assert.Matches(@"^(Calculator|Program)\.cs$", edit.GetProperty("file").GetString()!));
         Assert.Equal(3, edits[0].GetProperty("start").GetProperty("line").GetInt32());
         Assert.False(document.RootElement.TryGetProperty("newSolution", out _));
     }

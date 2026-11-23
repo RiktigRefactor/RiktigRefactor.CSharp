@@ -55,7 +55,7 @@ public static class RenameCommand
 
         if (arguments.Json)
         {
-            await standardOutput.WriteLineAsync(JsonSerializer.Serialize(result, JsonOptions)).ConfigureAwait(false);
+            await standardOutput.WriteLineAsync(JsonSerializer.Serialize(result.WithWorkspaceRelativePaths(WorkspaceRootOf(arguments.Workspace)), JsonOptions)).ConfigureAwait(false);
         }
         else
         {
@@ -74,6 +74,8 @@ public static class RenameCommand
 
         return ExitSuccess;
     }
+
+    static string WorkspaceRootOf(string workspace) => Path.GetDirectoryName(Path.GetFullPath(workspace))!;
 
     static Position ParsePosition(string at)
     {
