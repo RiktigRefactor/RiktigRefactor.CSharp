@@ -111,6 +111,47 @@ public class RenameCommandTests : IDisposable
         Assert.Contains("not part of the workspace", error);
     }
 
+    [Fact]
+    public async Task ApplyKeepsByteOrderMarkAndCrlfLineEndings()
+    {
+        WriteProject();
+        var crlfSource = CalculatorSource.Replace("\n", "\r\n", StringComparison.Ordinal);
+        File.WriteAllBytes(PathOf("Calculator.cs"), [0xEF, 0xBB, 0xBF, .. System.Text.Encoding.UTF8.GetBytes(crlfSource)]);
+
+        var (exitCode, _, _) = await RunAsync(newName: "Twice", apply: true, json: false);
+
+        Assert.Equal(RenameCommand.ExitSuccess, exitCode);
+        var expected = new byte[] { 0xEF, 0xBB, 0xBF }.Concat(System.Text.Encoding.UTF8.GetBytes(crlfSource.Replace("Double", "Twice", StringComparison.Ordinal)));
+        Assert.Equal(expected, File.ReadAllBytes(PathOf("Calculator.cs")));
+    }
+
+    [Theory]
+    [InlineData("3")]
+    [InlineData("0:1")]
+    [InlineData("a:b")]
+    [InlineData("1:2:3")]
+    public async Task MalformedPositionExitsWithTwoAndWritesNothing(string at)
+    {
+        WriteProject();
+
+        var (exitCode, _, error) = await RunAsync(newName: "Twice", apply: true, json: false, at: at);
+
+        Assert.Equal(RenameCommand.ExitError, exitCode);
+        Assert.Contains("is not a position", error);
+        Assert.Equal(CalculatorSource, File.ReadAllText(PathOf("Calculator.cs")));
+    }
+
+    [Fact]
+    public async Task UnsupportedWorkspaceExtensionExitsWithTwo()
+    {
+        WriteProject();
+
+        var (exitCode, _, error) = await RunAsync(newName: "Twice", apply: false, json: false, workspace: "Calculator.cs");
+
+        Assert.Equal(RenameCommand.ExitError, exitCode);
+        Assert.Contains("Unsupported workspace", error);
+    }
+
     string PathOf(string name) => Path.Combine(this._directory, name);
 
     void WriteProject()
@@ -120,11 +161,11 @@ public class RenameCommandTests : IDisposable
         File.WriteAllText(PathOf("Program.cs"), ProgramSource);
     }
 
-    async Task<(int ExitCode, string Output, string Error)> RunAsync(string newName, bool apply, bool json, string file = "Calculator.cs")
+    async Task<(int ExitCode, string Output, string Error)> RunAsync(string newName, bool apply, bool json, string file = "Calculator.cs", string at = "3:23", string workspace = "Sample.csproj")
     {
         using var output = new StringWriter();
         using var error = new StringWriter();
-        var arguments = new RenameArguments(PathOf("Sample.csproj"), PathOf(file), "3:23", newName, apply, json);
+        var arguments = new RenameArguments(PathOf(workspace), PathOf(file), at, newName, apply, json);
         var exitCode = await RenameCommand.RunAsync(arguments, output, error, TestContext.Current.CancellationToken);
         return (exitCode, output.ToString(), error.ToString());
     }
