@@ -74,7 +74,29 @@ makeMethodStaticCommand.SetAction((parseResult, cancellationToken) => MakeMethod
     Console.Error,
     cancellationToken));
 
-var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand, extractIifeCommand, makeMethodStaticCommand };
+var targetOption = new Option<string>("--target") { Description = "The namespace-qualified name of the type to move the member to, such as Shop.Pricing.", Required = true };
+var moveStaticMemberCommand = new Command("move-static-member", "Move the static member at the cursor to another type, and update every reference. Exits 0 on success, 1 when refused, 2 on error.")
+{
+    workspaceOption,
+    fileOption,
+    atOption,
+    targetOption,
+    applyOption,
+    jsonOption,
+};
+moveStaticMemberCommand.SetAction((parseResult, cancellationToken) => MoveStaticMemberCommand.RunAsync(
+    new MoveStaticMemberArguments(
+        parseResult.GetRequiredValue(workspaceOption),
+        parseResult.GetRequiredValue(fileOption),
+        parseResult.GetRequiredValue(atOption),
+        parseResult.GetRequiredValue(targetOption),
+        parseResult.GetValue(applyOption),
+        parseResult.GetValue(jsonOption)),
+    Console.Out,
+    Console.Error,
+    cancellationToken));
+
+var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand, extractIifeCommand, makeMethodStaticCommand, moveStaticMemberCommand };
 var parseResult = rootCommand.Parse(args);
 var exitCode = await parseResult.InvokeAsync();
 return parseResult.Errors.Count > 0 ? RefactoringCommand.ExitError : exitCode;
