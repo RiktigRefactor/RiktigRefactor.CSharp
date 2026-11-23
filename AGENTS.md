@@ -14,6 +14,8 @@ Also run it automatically before each commit.
 Rename cases are directories under `RiktigRefactor.CSharp.Tests/Cases/Rename/` holding `input/` (and `expected/` unless a refusal is expected) as real `.cs` files.
 Each case has one `[Fact]` in the matching `*RenameCaseTests.cs` class, which supplies the options, spec citations and expectations through `RenameCase`; there is no `case.json`.
 Extract IIFE cases work the same way under `RiktigRefactor.CSharp.Tests/Cases/ExtractIife/`, with one `[Fact]` per case in a `*ExtractIifeCaseTests.cs` class using `ExtractIifeCase`, and the selection marked with `/*[*/` and `/*]*/`.
+Make method static cases work the same way under `RiktigRefactor.CSharp.Tests/Cases/MakeMethodStatic/`, with one `[Fact]` per case in `MakeMethodStaticCaseTests.cs` using `MakeMethodStaticCase`, and the method marked with the cursor `/*|*/`.
+Refactorings other than Rename and Extract IIFE rewrite code through `Rewriting/RewrittenSolution`, which maps original text through the edits so `RewriteVerifier` can check every name, and share `CaseRunner` in the tests.
 Every input and expected file set is a complete program that throws if its behavior is wrong.
 To create the `expected/` directory for a new case, run the tests once with `RIKTIG_WRITE_EXPECTED=1`, then read the output and confirm it is correct and behavior-preserving before keeping it.
 Edge cases call `.NaiveShouldFail()` so the tests prove the assertion can detect the problem.

@@ -12,7 +12,7 @@ The specification defines the correctness model, the refactorings, the JSON prot
 
 ## What it can do
 
-The tool has two refactorings: Rename and Extract IIFE.
+The tool has three refactorings: Rename, Extract IIFE, and Make method static.
 
 Rename renames a symbol and every reference to it across a whole solution or project.
 
@@ -49,6 +49,28 @@ It refuses when it can't prove that wrapping keeps behavior, for example when:
 
 After extracting, it checks that the result compiles and that every name binds as before.
 
+Make method static turns an instance method into a static method on the same type, with the receiver as a new first parameter, and rewrites every call:
+
+```csharp
+// Before
+public decimal Total(int qty) => price * qty;
+var t = order.Total(3);
+
+// After
+public static decimal Total(Order order, int qty) => order.price * qty;
+var t = Order.Total(order, 3);
+```
+
+A struct receiver is passed by `ref`, or by `in` when the method is `readonly` or the struct is a `readonly struct`.
+It refuses when, for example:
+
+- the method is `virtual`, `abstract`, an `override`, or implements an interface member;
+- the method is used as a method group, or called null-conditionally (`order?.Total(3)`);
+- a call's receiver can't be proven non-null (it must be `this`, a new object, a struct, or a local only ever assigned a new object), because a null receiver throws before the arguments' side effects would reach the body;
+- a struct receiver passed by `ref` is not a mutable variable, because the original call ran on a copy;
+- the body uses `base`, or a call is inside an expression tree or query;
+- a call to another overload would bind to the new static method.
+
 Each refusal has a code, listed in [refusal-codes.md](refusal-codes.md).
 
 See [limitations](https://github.com/RiktigRefactor/riktigrefactor.spec/blob/main/limitations.md) for what is out of scope, such as reflection, serialization by name, and updating comments and strings.
@@ -81,6 +103,12 @@ Preview an Extract IIFE of the text from line 12, column 19 up to (not including
 
 ```shell
 riktig-cs extract-iife --workspace App.sln --file src/Foo.cs --from 12:19 --to 12:30
+```
+
+Make the method at line 5, column 20 static, naming its receiver parameter `self`:
+
+```shell
+riktig-cs make-method-static --workspace App.sln --file src/Order.cs --at 5:20 --receiver-name self
 ```
 
 The workspace must be restored (`dotnet restore`) so that types resolve; otherwise the tool refuses.
