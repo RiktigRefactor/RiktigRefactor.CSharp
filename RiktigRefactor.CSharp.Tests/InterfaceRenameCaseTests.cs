@@ -18,7 +18,7 @@ public class InterfaceRenameCaseTests
         => RenameCase.InDirectory("interface/implements-framework-interface")
             .RenameTo("Release")
             .ExpectRefusal("not-renameable")
-            .NaiveShouldFail()
+            .NaiveShouldFailWith("CS0535")
             .RunAsync();
 
     // Renaming the implementation also renames the interface member, otherwise the class would stop implementing it.

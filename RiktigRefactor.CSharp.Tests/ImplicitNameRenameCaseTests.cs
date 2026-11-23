@@ -31,7 +31,7 @@ public class ImplicitNameRenameCaseTests
         => RenameCase.InDirectory("implicit-name/dispose")
             .RenameTo("Close")
             .ExpectRefusal("binding-would-change")
-            .NaiveShouldFail()
+            .NaiveShouldFailWith("CS1674")
             .RunAsync();
 
     // await looks up GetAwaiter by name and prefers an instance method over an extension, so the renamed method would capture the await.
@@ -61,7 +61,7 @@ public class ImplicitNameRenameCaseTests
         => RenameCase.InDirectory("implicit-name/get-result")
             .RenameTo("Result")
             .ExpectRefusal("binding-would-change")
-            .NaiveShouldFail()
+            .NaiveShouldFailWith("CS0117")
             .RunAsync();
 
     // An interpolated string handler's AppendLiteral is called by name, so renaming it breaks the interpolated string without a visible reference.
@@ -81,7 +81,7 @@ public class ImplicitNameRenameCaseTests
         => RenameCase.InDirectory("implicit-name/list-pattern-length")
             .RenameTo("Length")
             .ExpectRefusal("binding-would-change")
-            .NaiveShouldFail()
+            .NaiveShouldFailWith("should use Count")
             .RunAsync();
 
     // foreach calls Current by name, so renaming it breaks the loop without a visible reference.
@@ -91,7 +91,7 @@ public class ImplicitNameRenameCaseTests
         => RenameCase.InDirectory("implicit-name/move-next-current")
             .RenameTo("Value")
             .ExpectRefusal("binding-would-change")
-            .NaiveShouldFail()
+            .NaiveShouldFailWith("CS0117")
             .RunAsync();
 
     // A query expression calls Select by name and prefers an instance method over an extension, so the renamed method would capture the query.
@@ -111,7 +111,7 @@ public class ImplicitNameRenameCaseTests
         => RenameCase.InDirectory("implicit-name/range-slice")
             .RenameTo("Cut")
             .ExpectRefusal("binding-would-change")
-            .NaiveShouldFail()
+            .NaiveShouldFailWith("CS1503")
             .RunAsync();
 
     // A record uses a user-declared Equals(R) in place of the synthesized one, and == calls it without naming it.

@@ -14,12 +14,14 @@ namespace RiktigRefactor.CSharp.Tests.Infrastructure;
 /// <param name="Projects">For multi-project cases: project name to the names of projects it references, in build order. The last project is the program entry point. A file belongs to the project named by its first path segment. Null means a single project.</param>
 /// <param name="RefusalCode">The expected refusal code, or null if the rename should succeed.</param>
 /// <param name="NaiveMustFail">True for edge cases: the naive rename must produce a program that fails.</param>
+/// <param name="NaiveFailureContains">When set, the naive rename's failure message must contain this text, so the case proves it fails for the reason it names.</param>
 public record RenameCase(
     string CaseDirectory,
     string? NewName = null,
     IReadOnlyDictionary<string, IReadOnlyList<string>>? Projects = null,
     string? RefusalCode = null,
-    bool NaiveMustFail = false)
+    bool NaiveMustFail = false,
+    string? NaiveFailureContains = null)
 {
     /// <summary>Set to 1 to write the produced output into each case's expected directory. Review the diff before committing.</summary>
     const string WriteExpectedVariable = "RIKTIG_WRITE_EXPECTED";
@@ -34,6 +36,8 @@ public record RenameCase(
     public RenameCase ExpectRefusal(string code) => this with { RefusalCode = code };
 
     public RenameCase NaiveShouldFail() => this with { NaiveMustFail = true };
+
+    public RenameCase NaiveShouldFailWith(string failureText) => this with { NaiveMustFail = true, NaiveFailureContains = failureText };
 
     public async Task RunAsync()
     {
@@ -90,6 +94,10 @@ public record RenameCase(
         var naiveSolution = await NaiveRename.RenameAsync(solution, documentId, selection.Start, newName);
         var naiveFailure = ProgramRunner.CompileAndRun(await TestWorkspace.ReadFilesAsync(naiveSolution), Projects);
         Assert.True(naiveFailure is not null, "The naive rename passed this test, so the test can't detect the edge case it targets.");
+        if (NaiveFailureContains is not null)
+        {
+            Assert.Contains(NaiveFailureContains, naiveFailure);
+        }
     }
 
     static string ApplyEdits(string text, IEnumerable<FileEdit> edits)
