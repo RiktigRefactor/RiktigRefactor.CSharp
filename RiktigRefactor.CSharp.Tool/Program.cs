@@ -96,7 +96,29 @@ moveStaticMemberCommand.SetAction((parseResult, cancellationToken) => MoveStatic
     Console.Error,
     cancellationToken));
 
-var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand, extractIifeCommand, makeMethodStaticCommand, moveStaticMemberCommand };
+var receiverOption = new Option<string>("--receiver") { Description = "The name of the parameter that becomes the receiver.", Required = true };
+var moveToInstanceMethodCommand = new Command("move-to-instance-method", "Turn the static method at the cursor into an instance method on the type of one of its parameters. Exits 0 on success, 1 when refused, 2 on error.")
+{
+    workspaceOption,
+    fileOption,
+    atOption,
+    receiverOption,
+    applyOption,
+    jsonOption,
+};
+moveToInstanceMethodCommand.SetAction((parseResult, cancellationToken) => MoveToInstanceMethodCommand.RunAsync(
+    new MoveToInstanceMethodArguments(
+        parseResult.GetRequiredValue(workspaceOption),
+        parseResult.GetRequiredValue(fileOption),
+        parseResult.GetRequiredValue(atOption),
+        parseResult.GetRequiredValue(receiverOption),
+        parseResult.GetValue(applyOption),
+        parseResult.GetValue(jsonOption)),
+    Console.Out,
+    Console.Error,
+    cancellationToken));
+
+var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand, extractIifeCommand, makeMethodStaticCommand, moveStaticMemberCommand, moveToInstanceMethodCommand };
 var parseResult = rootCommand.Parse(args);
 var exitCode = await parseResult.InvokeAsync();
 return parseResult.Errors.Count > 0 ? RefactoringCommand.ExitError : exitCode;
