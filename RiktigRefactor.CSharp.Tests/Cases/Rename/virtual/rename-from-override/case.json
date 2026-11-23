@@ -1,9 +1,0 @@
-{
-  "options": {
-    "newName": "Title"
-  },
-  "spec": [
-    "C# spec \u00a715.6.5 Override methods"
-  ],
-  "notes": "Renaming a leaf override renames the whole hierarchy."
-}

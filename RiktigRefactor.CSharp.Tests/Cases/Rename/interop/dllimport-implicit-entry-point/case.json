@@ -1,7 +1,0 @@
-{
-  "options": {
-    "newName": "MeasureText"
-  },
-  "naiveShouldFail": true,
-  "notes": "With no EntryPoint, DllImport calls the native function named like the method, so the rename has to write the old name as the entry point."
-}

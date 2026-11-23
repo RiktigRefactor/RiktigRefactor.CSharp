@@ -1,6 +1,0 @@
-{
-  "options": {
-    "newName": "MeasureText"
-  },
-  "notes": "The entry point is already explicit, so only the method name changes."
-}

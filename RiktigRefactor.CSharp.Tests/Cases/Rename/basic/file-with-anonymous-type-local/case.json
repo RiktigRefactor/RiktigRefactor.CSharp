@@ -1,9 +1,0 @@
-{
-  "options": {
-    "newName": "Compute"
-  },
-  "spec": [
-    "C# spec §12.8.17.3 Anonymous object creation expressions"
-  ],
-  "notes": "An anonymous type has no name, so the verifier must match it by position and member names rather than by name."
-}

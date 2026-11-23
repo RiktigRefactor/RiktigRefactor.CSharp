@@ -11,10 +11,11 @@ Also run it automatically before each commit.
 
 ## Test cases
 
-Rename cases are directories under `RiktigRefactor.CSharp.Tests/Cases/Rename/`, in the format described in the spec's `test-format.md`.
+Rename cases are directories under `RiktigRefactor.CSharp.Tests/Cases/Rename/` holding `input/` (and `expected/` unless a refusal is expected) as real `.cs` files.
+Each case has one `[Fact]` in the matching `*RenameCaseTests.cs` class, which supplies the options, spec citations and expectations through `RenameCase`; there is no `case.json`.
 Every input and expected file set is a complete program that throws if its behavior is wrong.
 To create the `expected/` directory for a new case, run the tests once with `RIKTIG_WRITE_EXPECTED=1`, then read the output and confirm it is correct and behavior-preserving before keeping it.
-Edge cases set `naiveShouldFail` so the tests prove the assertion can detect the problem.
+Edge cases call `.NaiveShouldFail()` so the tests prove the assertion can detect the problem.
 
 ## Secrets
 

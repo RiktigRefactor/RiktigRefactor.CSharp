@@ -1,9 +1,0 @@
-{
-  "options": {
-    "newName": "Quantity"
-  },
-  "spec": [
-    "C# spec \u00a712.8.23 The nameof operator"
-  ],
-  "notes": "nameof tracks the rename, so the reflection lookup by the nameof string still finds the property."
-}

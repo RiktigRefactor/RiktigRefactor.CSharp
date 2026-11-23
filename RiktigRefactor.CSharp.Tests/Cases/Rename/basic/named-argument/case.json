@@ -1,9 +1,0 @@
-{
-  "options": {
-    "newName": "start"
-  },
-  "spec": [
-    "C# spec \u00a712.6.2 Argument lists"
-  ],
-  "notes": "The named argument at the call site must be renamed with the parameter; if it were not, the call would not compile."
-}

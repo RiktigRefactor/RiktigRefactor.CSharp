@@ -1,9 +1,0 @@
-{
-  "options": {
-    "newName": "MakeNoise"
-  },
-  "spec": [
-    "C# spec \u00a715.6.4 Virtual methods",
-    "C# spec \u00a715.6.5 Override methods"
-  ]
-}

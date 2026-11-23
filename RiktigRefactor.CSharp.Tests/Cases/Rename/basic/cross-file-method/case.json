@@ -1,9 +1,0 @@
-{
-  "options": {
-    "newName": "Twice"
-  },
-  "spec": [
-    "C# spec \u00a712.8.10 Invocation expressions"
-  ],
-  "notes": "The cursor is on the declaration; the only reference is in another file."
-}

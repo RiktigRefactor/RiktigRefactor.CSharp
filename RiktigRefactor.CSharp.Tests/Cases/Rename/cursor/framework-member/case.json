@@ -1,7 +1,0 @@
-{
-  "options": {
-    "newName": "Print"
-  },
-  "refuse": "not-renameable",
-  "notes": "Console.WriteLine is declared in the framework."
-}
