@@ -32,4 +32,4 @@ renameCommand.SetAction((parseResult, cancellationToken) => RenameCommand.RunAsy
 var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand };
 var parseResult = rootCommand.Parse(args);
 var exitCode = await parseResult.InvokeAsync();
-return parseResult.Errors.Count > 0 ? RenameCommand.ExitError : exitCode;
+return parseResult.Errors.Count > 0 ? RefactoringCommand.ExitError : exitCode;
