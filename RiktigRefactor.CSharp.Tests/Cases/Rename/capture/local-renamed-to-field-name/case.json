@@ -4,7 +4,7 @@
   },
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a77.7 Scopes",
+    "C# spec \u00a77.6 Scopes",
     "C# spec \u00a712.8.4 Simple names"
   ],
   "notes": "The existing reference to the property `offset` would be captured by the renamed local; the trace shows whether the property getter still runs."

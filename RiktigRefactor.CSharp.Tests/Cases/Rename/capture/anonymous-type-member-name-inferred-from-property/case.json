@@ -4,7 +4,7 @@
   },
   "naiveShouldFail": true,
   "spec": [
-    "C# spec §12.8.17.7 Anonymous object creation expressions"
+    "C# spec §12.8.17.3 Anonymous object creation expressions"
   ],
   "notes": "The anonymous type's member name is inferred from the property and shows in its ToString."
 }

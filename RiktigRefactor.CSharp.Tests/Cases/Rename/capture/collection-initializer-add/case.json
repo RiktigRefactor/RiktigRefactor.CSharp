@@ -5,7 +5,7 @@
   "refuse": "binding-would-change",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a712.8.17.4 Collection initializers"
+    "C# spec \u00a712.8.17.2.3 Collection initializers"
   ],
   "notes": "A collection initializer calls Add by overload resolution without naming it, so a renamed method can capture the element additions."
 }

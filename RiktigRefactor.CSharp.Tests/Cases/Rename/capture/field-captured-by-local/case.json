@@ -4,7 +4,7 @@
   },
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a77.7 Scopes",
+    "C# spec \u00a77.6 Scopes",
     "C# spec \u00a712.8.4 Simple names"
   ],
   "notes": "After the rename the reference to the field would be captured by the local `total`; it must be qualified."

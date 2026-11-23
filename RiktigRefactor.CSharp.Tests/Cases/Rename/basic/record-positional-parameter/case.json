@@ -3,7 +3,7 @@
     "newName": "Horizontal"
   },
   "spec": [
-    "C# spec §15.15 Record types"
+    "C# spec §15.16 Record classes"
   ],
   "notes": "The positional parameter and the property it generates are the same symbol for rename purposes. The record's synthesized ToString now prints the new name, which is intended (see the spec's limitations.md)."
 }

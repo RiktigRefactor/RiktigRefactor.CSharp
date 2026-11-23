@@ -5,7 +5,7 @@
   "refuse": "binding-would-change",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec §15.7 Primary constructors"
+    "C# spec §15.11.6 Primary constructors"
   ],
   "notes": "A field named like the primary constructor parameter hides it in member bodies."
 }

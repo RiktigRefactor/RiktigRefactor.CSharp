@@ -4,7 +4,7 @@
   },
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a77.7.1 Hiding through inheritance",
+    "C# spec \u00a77.6.2.3 Hiding through inheritance",
     "C# spec \u00a712.5 Member lookup"
   ],
   "notes": "The renamed member hides Base.Weight, so the reference to Base.Weight must become `base.Weight`."

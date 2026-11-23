@@ -5,7 +5,7 @@
   "refuse": "binding-would-change",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a712.9.8.2 Awaitable expressions"
+    "C# spec \u00a712.9.9.2 Awaitable expressions"
   ],
   "notes": "await looks up GetAwaiter by name and prefers an instance method over an extension, so the renamed method would capture the await."
 }

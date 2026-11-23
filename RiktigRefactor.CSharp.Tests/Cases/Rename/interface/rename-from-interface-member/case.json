@@ -3,7 +3,7 @@
     "newName": "Measure"
   },
   "spec": [
-    "C# spec \u00a718.6 Interface implementations"
+    "C# spec \u00a719.6 Interface implementations"
   ],
   "notes": "The implicit implementation must be renamed together with the interface member."
 }

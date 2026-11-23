@@ -5,7 +5,7 @@
   "refuse": "binding-would-change",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a712.22.3 Query expression translation"
+    "C# spec \u00a712.23.3 Query expression translation"
   ],
   "notes": "A query expression calls Select by name and prefers an instance method over an extension, so the renamed method would capture the query."
 }
