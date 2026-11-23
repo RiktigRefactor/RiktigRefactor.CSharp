@@ -6,24 +6,33 @@ namespace RiktigRefactor.CSharp.Tests.Infrastructure;
 
 public static class TestWorkspace
 {
-    public static Solution CreateSolution(IReadOnlyDictionary<string, string> files)
+    public const string SingleProjectName = "TestProgram";
+
+    public static Solution CreateSolution(IReadOnlyDictionary<string, string> files, IReadOnlyDictionary<string, IReadOnlyList<string>>? projects = null)
     {
         var workspace = new AdhocWorkspace();
-        var projectId = ProjectId.CreateNewId();
-        var solution = workspace.CurrentSolution
-            .AddProject(ProjectInfo.Create(
-                projectId,
+        var solution = workspace.CurrentSolution;
+        var projectIds = (projects?.Keys ?? [SingleProjectName]).ToDictionary(name => name, _ => ProjectId.CreateNewId(), StringComparer.Ordinal);
+        var projectOrder = projects?.Keys.ToList() ?? [SingleProjectName];
+        foreach (var name in projectOrder)
+        {
+            var isEntry = name == projectOrder[^1];
+            solution = solution.AddProject(ProjectInfo.Create(
+                projectIds[name],
                 VersionStamp.Create(),
-                "TestProgram",
-                "TestProgram",
+                name,
+                name,
                 LanguageNames.CSharp,
-                compilationOptions: new CSharpCompilationOptions(OutputKind.ConsoleApplication, nullableContextOptions: NullableContextOptions.Enable),
+                compilationOptions: new CSharpCompilationOptions(isEntry ? OutputKind.ConsoleApplication : OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable),
                 parseOptions: ProgramRunner.ParseOptions,
-                metadataReferences: ProgramRunner.References));
+                metadataReferences: ProgramRunner.References,
+                projectReferences: projects?[name].Select(reference => new ProjectReference(projectIds[reference]))));
+        }
 
         foreach (var (name, text) in files.OrderBy(file => file.Key, StringComparer.Ordinal))
         {
-            solution = solution.AddDocument(DocumentId.CreateNewId(projectId, name), name, SourceText.From(text), filePath: name);
+            var project = projects is null ? SingleProjectName : name[..name.IndexOf('/')];
+            solution = solution.AddDocument(DocumentId.CreateNewId(projectIds[project], name), name, SourceText.From(text), filePath: name);
         }
 
         return solution;

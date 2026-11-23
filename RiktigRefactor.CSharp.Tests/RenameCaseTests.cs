@@ -22,9 +22,9 @@ public class RenameCaseTests
         var (inputFiles, selection) = SelectionMarkers.Strip(testCase.InputFiles);
         var newName = testCase.Definition.Options?["newName"] ?? throw new InvalidOperationException($"{name}: options.newName is required.");
 
-        Assert.Null(ProgramRunner.CompileAndRun(inputFiles));
+        Assert.Null(ProgramRunner.CompileAndRun(inputFiles, testCase.Definition.Projects));
 
-        var solution = TestWorkspace.CreateSolution(inputFiles);
+        var solution = TestWorkspace.CreateSolution(inputFiles, testCase.Definition.Projects);
         var documentId = TestWorkspace.FindDocument(solution, selection.File);
         var result = await RenameRefactoring.RenameAsync(solution, documentId, selection.Start, newName, TestContext.Current.CancellationToken);
 
@@ -50,7 +50,7 @@ public class RenameCaseTests
             Assert.Equal(expectedText, outputFiles[file]);
         }
 
-        Assert.Null(ProgramRunner.CompileAndRun(outputFiles));
+        Assert.Null(ProgramRunner.CompileAndRun(outputFiles, testCase.Definition.Projects));
         Assert.Equal(outputFiles.Where(file => file.Value != inputFiles[file.Key]).Select(file => file.Key).Order(StringComparer.Ordinal), result.Edits.Select(edit => edit.File).Distinct().Order(StringComparer.Ordinal));
         foreach (var (file, text) in outputFiles)
         {
@@ -68,7 +68,7 @@ public class RenameCaseTests
         }
 
         var naiveSolution = await NaiveRename.RenameAsync(solution, documentId, selection.Start, newName);
-        var naiveFailure = ProgramRunner.CompileAndRun(await TestWorkspace.ReadFilesAsync(naiveSolution));
+        var naiveFailure = ProgramRunner.CompileAndRun(await TestWorkspace.ReadFilesAsync(naiveSolution), testCase.Definition.Projects);
         Assert.True(naiveFailure is not null, "The naive rename passed this test, so the test can't detect the edge case it targets.");
     }
 
@@ -84,10 +84,11 @@ public class RenameCaseTests
     static void WriteExpected(string name, IReadOnlyDictionary<string, string> outputFiles)
     {
         var directory = TestCase.ExpectedDirectory(name);
-        Directory.CreateDirectory(directory);
         foreach (var (file, text) in outputFiles)
         {
-            File.WriteAllText(Path.Combine(directory, file), text);
+            var path = Path.Combine(directory, file);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, text);
         }
     }
 }

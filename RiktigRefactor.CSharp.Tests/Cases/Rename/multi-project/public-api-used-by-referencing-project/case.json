@@ -1,0 +1,15 @@
+{
+  "options": {
+    "newName": "Twice"
+  },
+  "projects": {
+    "Lib": [],
+    "App": [
+      "Lib"
+    ]
+  },
+  "spec": [
+    "C# spec §12.8.10 Invocation expressions"
+  ],
+  "notes": "The declaration is in a library project; the only reference is in a project that references it."
+}

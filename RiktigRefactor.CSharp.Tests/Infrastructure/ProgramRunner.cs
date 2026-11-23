@@ -13,28 +13,44 @@ public static class ProgramRunner
     public static readonly IReadOnlyList<MetadataReference> References = LoadRuntimeReferences();
 
     /// <returns>Null if the program compiled and ran without throwing; otherwise a description of the failure.</returns>
-    public static string? CompileAndRun(IReadOnlyDictionary<string, string> files)
+    public static string? CompileAndRun(IReadOnlyDictionary<string, string> files, IReadOnlyDictionary<string, IReadOnlyList<string>>? projects = null)
     {
-        var trees = files.Select(file => CSharpSyntaxTree.ParseText(file.Value, ParseOptions, file.Key));
-        var compilation = CSharpCompilation.Create(
-            "TestProgram",
-            trees,
-            References,
-            new CSharpCompilationOptions(OutputKind.ConsoleApplication, nullableContextOptions: NullableContextOptions.Enable));
-
-        using var image = new MemoryStream();
-        var emit = compilation.Emit(image);
-        if (!emit.Success)
-        {
-            var errors = emit.Diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
-            return "Compile failed:\n" + string.Join("\n", errors);
-        }
-
-        image.Position = 0;
         var context = new AssemblyLoadContext("TestProgram", isCollectible: true);
         try
         {
-            var entryPoint = context.LoadFromStream(image).EntryPoint
+            var compiledProjects = new Dictionary<string, MetadataReference>(StringComparer.Ordinal);
+            var projectOrder = projects?.Keys.ToList() ?? [TestWorkspace.SingleProjectName];
+            Assembly? entryAssembly = null;
+            foreach (var project in projectOrder)
+            {
+                var isEntry = project == projectOrder[^1];
+                var projectFiles = projects is null ? files : files.Where(file => file.Key.StartsWith(project + "/", StringComparison.Ordinal));
+                var trees = projectFiles.Select(file => CSharpSyntaxTree.ParseText(file.Value, ParseOptions, file.Key));
+                var referencedProjects = projects?[project].Select(name => compiledProjects[name]) ?? [];
+                var compilation = CSharpCompilation.Create(
+                    project,
+                    trees,
+                    [.. References, .. referencedProjects],
+                    new CSharpCompilationOptions(isEntry ? OutputKind.ConsoleApplication : OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
+
+                var image = new MemoryStream();
+                var emit = compilation.Emit(image);
+                if (!emit.Success)
+                {
+                    var errors = emit.Diagnostics.Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
+                    return $"Compile failed ({project}):\n" + string.Join("\n", errors);
+                }
+
+                compiledProjects[project] = MetadataReference.CreateFromImage(image.ToArray());
+                image.Position = 0;
+                var assembly = context.LoadFromStream(image);
+                if (isEntry)
+                {
+                    entryAssembly = assembly;
+                }
+            }
+
+            var entryPoint = entryAssembly!.EntryPoint
                 ?? throw new InvalidOperationException("The program has no entry point.");
             object?[]? arguments = entryPoint.GetParameters().Length == 0 ? null : [Array.Empty<string>()];
             var returned = entryPoint.Invoke(null, arguments);
