@@ -4,6 +4,29 @@ namespace RiktigRefactor.CSharp.Tests;
 
 public class BasicRenameCaseTests
 {
+    // `[My(...)]` binds to the attribute's implicit constructor, which is declared at the class name.
+    [Fact]
+    [Spec("C# spec §23.3 Attribute specification")]
+    public Task AttributeClassWithNamedArgument()
+        => RenameCase.InDirectory("basic/attribute-class-with-named-argument")
+            .RenameTo("TagAttribute")
+            .RunAsync();
+
+    // The named argument `Value = 5` sets the renamed property.
+    [Fact]
+    [Spec("C# spec §23.3 Attribute specification")]
+    public Task AttributeNamedArgument()
+        => RenameCase.InDirectory("basic/attribute-named-argument")
+            .RenameTo("Size")
+            .RunAsync();
+
+    [Fact]
+    [Spec("C# spec §23.3 Attribute specification")]
+    public Task AttributeNamedArgumentExplicitConstructor()
+        => RenameCase.InDirectory("basic/attribute-named-argument-explicit-constructor")
+            .RenameTo("Size")
+            .RunAsync();
+
     // The cursor is on the declaration; the only reference is in another file.
     [Fact]
     [Spec("C# spec §12.8.10 Invocation expressions")]

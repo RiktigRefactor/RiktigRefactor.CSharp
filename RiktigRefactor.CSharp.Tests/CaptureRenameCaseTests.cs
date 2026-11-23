@@ -42,13 +42,12 @@ public class CaptureRenameCaseTests
             .NaiveShouldFail()
             .RunAsync();
 
-    // `[Mark]` would become `[Serial]`, which binds to `SerialAttribute` by the attribute suffix rule.
+    // `[Mark]` must become `[@Serial]`: a plain `[Serial]` would also match `SerialAttribute` by the attribute suffix rule.
     [Fact]
     [Spec("C# spec §23.3 Attribute specification")]
     public Task AttributeClassRenamedToOtherAttributeShortName()
         => RenameCase.InDirectory("capture/attribute-class-renamed-to-other-attribute-short-name")
             .RenameTo("Serial")
-            .ExpectRefusal("binding-would-change")
             .NaiveShouldFail()
             .RunAsync();
 

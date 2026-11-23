@@ -53,16 +53,17 @@ public static class SymbolIdentity
     public static string SourceId(ISymbol definition, DocumentId documentId, int start)
         => $"source:{definition.Kind}:{documentId.Id}:{start}{AnonymousTypeMemberNames(definition)}";
 
-    /// <summary>The name its declaring token has; anonymous types have none, so their <c>new</c> keyword stands in.</summary>
-    public static string DeclaringTokenText(ISymbol definition)
+    /// <summary>
+    /// The name its declaring token has.
+    /// Anonymous types have none, so their <c>new</c> keyword stands in.
+    /// Constructors and destructors (including a type's implicit default constructor, located at the type's name) are declared by their type's name.
+    /// </summary>
+    public static string DeclaringTokenText(ISymbol definition) => definition switch
     {
-        if (definition is INamedTypeSymbol { IsAnonymousType: true })
-        {
-            return "new";
-        }
-
-        return definition.Name;
-    }
+        INamedTypeSymbol { IsAnonymousType: true } => "new",
+        IMethodSymbol { MethodKind: MethodKind.Constructor or MethodKind.StaticConstructor or MethodKind.Destructor } constructor => constructor.ContainingType.Name,
+        _ => definition.Name,
+    };
 
     static string AnonymousTypeMemberNames(ISymbol definition)
     {

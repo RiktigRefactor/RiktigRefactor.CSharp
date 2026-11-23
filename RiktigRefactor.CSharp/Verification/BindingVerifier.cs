@@ -92,11 +92,13 @@ public class BindingVerifier
     {
         var oldSymbols = BoundSymbols(oldModel, oldName, cancellationToken);
         var oldIds = oldSymbols.Select(symbol => SymbolIdentity.Describe(this._oldSolution, symbol)).ToList();
-        var renamedTo = oldIds.Select(id => this._renamedSymbolIdsToNewNames.GetValueOrDefault(id)).FirstOrDefault(name => name is not null);
+        var renamedTo = oldIds.Select(id => this._renamedSymbolIdsToNewNames.GetValueOrDefault(id)).FirstOrDefault(name => name is not null)
+            ?? oldSymbols.Select(RenamedTypeNameIfConstructor).FirstOrDefault(name => name is not null);
         var expectedText = oldName.IsVar ? oldName.Identifier.ValueText : renamedTo ?? oldName.Identifier.ValueText;
 
         var map = await GetChangeMapAsync(oldDocument.Id, cancellationToken).ConfigureAwait(false);
-        var newToken = map.FindNewToken(oldName.Identifier.SpanStart, expectedText);
+        var newToken = map.FindNewToken(oldName.Identifier.SpanStart, expectedText)
+            ?? (AttributeShortName(expectedText) is { } shortName ? map.FindNewToken(oldName.Identifier.SpanStart, shortName) : null);
         if (newToken?.Parent is not SimpleNameSyntax newName)
         {
             return BindingChanged(oldName, $"`{oldName.Identifier.ValueText}` could not be found after the change.");
@@ -136,13 +138,28 @@ public class BindingVerifier
         }
 
         var oldId = SymbolIdentity.Describe(this._oldSolution, oldSymbol);
-        var expectedName = this._renamedSymbolIdsToNewNames.GetValueOrDefault(oldId) ?? SymbolIdentity.DeclaringTokenText(definition);
+        var expectedName = this._renamedSymbolIdsToNewNames.GetValueOrDefault(oldId)
+            ?? RenamedTypeNameIfConstructor(definition)
+            ?? SymbolIdentity.DeclaringTokenText(definition);
         var map = await GetChangeMapAsync(oldDocumentId, cancellationToken).ConfigureAwait(false);
         var newToken = map.FindNewToken(sourceLocation.SourceSpan.Start, expectedName);
         return newToken is { } token
             ? SymbolIdentity.SourceId(definition, oldDocumentId, token.SpanStart)
             : $"missing-declaration:{oldId}";
     }
+
+    /// <summary>
+    /// An attribute may be written without its <c>Attribute</c> suffix, so a renamed attribute type may be spelled either way.
+    /// Either spelling is accepted here, since the binding check that follows decides whether it means the same.
+    /// </summary>
+    static string? AttributeShortName(string name)
+        => name.Length > "Attribute".Length && name.EndsWith("Attribute", StringComparison.Ordinal) ? name[..^"Attribute".Length] : null;
+
+    /// <summary>A constructor is declared by its type's name, so renaming the type renames that token.</summary>
+    string? RenamedTypeNameIfConstructor(ISymbol definition)
+        => definition is IMethodSymbol { MethodKind: MethodKind.Constructor or MethodKind.StaticConstructor or MethodKind.Destructor } constructor
+            ? this._renamedSymbolIdsToNewNames.GetValueOrDefault(OldSymbolId(this._oldSolution, constructor.ContainingType))
+            : null;
 
     static List<ISymbol> BoundSymbols(SemanticModel model, SimpleNameSyntax name, CancellationToken cancellationToken)
     {
