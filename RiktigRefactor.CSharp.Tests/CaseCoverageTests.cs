@@ -29,5 +29,18 @@ public class CaseCoverageTests
         Assert.Empty(untested);
     }
 
+    [Theory]
+    [InlineData("MakeMethodStatic")]
+    public void EveryCaseDirectoryHasATest(string refactoring)
+    {
+        var testSource = string.Concat(Directory.EnumerateFiles(TestsDirectory(), $"*{refactoring}CaseTests.cs").Select(File.ReadAllText));
+
+        var untested = TestCase.FindDirectories(refactoring)
+            .Where(directory => !testSource.Contains($"InDirectory(\"{directory}\")", StringComparison.Ordinal))
+            .ToList();
+
+        Assert.Empty(untested);
+    }
+
     static string TestsDirectory([CallerFilePath] string thisFile = "") => Path.GetDirectoryName(thisFile)!;
 }

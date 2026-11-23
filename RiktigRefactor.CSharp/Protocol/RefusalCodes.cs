@@ -29,5 +29,12 @@ public static class RefusalCodes
     public const string DisposalWouldMove = "disposal-would-move";
     public const string ExpressionTreeOrQuery = "expression-tree-or-query";
     public const string TooManyVariables = "too-many-variables";
+    public const string NotInstanceMethod = "not-instance-method";
+    public const string DynamicDispatch = "dynamic-dispatch";
+    public const string ImplicitReference = "implicit-reference";
+    public const string MethodGroupReference = "method-group-reference";
+    public const string ReceiverMayBeNull = "receiver-may-be-null";
+    public const string ReceiverNotVariable = "receiver-not-variable";
+    public const string UnsupportedReceiver = "unsupported-receiver";
     public const string InternalVerificationFailed = "internal-verification-failed";
 }
