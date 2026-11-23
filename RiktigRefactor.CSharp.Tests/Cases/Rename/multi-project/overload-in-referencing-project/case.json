@@ -1,0 +1,17 @@
+{
+  "options": {
+    "newName": "Pick"
+  },
+  "projects": {
+    "Lib": [],
+    "App": [
+      "Lib"
+    ]
+  },
+  "refuse": "binding-would-change",
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec §12.6.4 Overload resolution"
+  ],
+  "notes": "After the rename, a call in the referencing project resolves to the renamed overload instead of the original."
+}
