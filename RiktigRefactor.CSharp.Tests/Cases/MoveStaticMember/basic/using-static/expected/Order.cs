@@ -1,0 +1,6 @@
+namespace Shop
+{
+    class Order
+    {
+    }
+}

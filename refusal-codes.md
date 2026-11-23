@@ -7,7 +7,7 @@ A new code is listed in the release notes.
 
 | Code | Meaning |
 |---|---|
-| `no-symbol` | There is no renameable symbol, or no method, at the cursor. |
+| `no-symbol` | There is no renameable symbol, or no method or member, at the cursor. |
 | `not-renameable` | The symbol can't be renamed: it is not declared in the workspace, it overrides or implements a member that is not, or the rename would edit generated code. |
 | `invalid-identifier` | The new name (or a new parameter's name) is not a valid identifier, or is a keyword without an `@` escape. |
 | `conflicting-declaration` | The new name, or a method's new signature, collides with an existing declaration. |
@@ -36,9 +36,16 @@ A new code is listed in the release notes.
 | `too-many-variables` | Extract IIFE: the lambda would need more than 16 parameters. |
 | `not-instance-method` | Make method static: the method is not an ordinary instance method with a body, declared once (not `partial` or `extern`) in a class, struct or record of the workspace. |
 | `dynamic-dispatch` | Make method static: the method is `virtual`, `abstract`, an `override`, or implements an interface member (for its own type or a derived type). |
-| `implicit-reference` | Make method static: the method has a name the compiler looks up by pattern (such as `GetEnumerator`, `Add`, `Deconstruct`, or a LINQ query method), or is called implicitly. |
+| `implicit-reference` | Make method static, Move static member: the method has a name the compiler looks up by pattern (such as `GetEnumerator`, `Add`, `Deconstruct`, or a LINQ query method), or is called implicitly. |
 | `method-group-reference` | Make method static: the method is used as a method group, which binds its receiver when the delegate is created. |
 | `receiver-may-be-null` | Make method static: a call's receiver can't be proven non-null, or the call is null-conditional. A null receiver throws before the body runs, and a static method would run the body. |
 | `receiver-not-variable` | Make method static: a struct receiver passed by `ref` is not a mutable variable (a `readonly` field, an `in` parameter, a temporary, or `this` in a readonly member), so the original call ran on a copy. |
 | `unsupported-receiver` | Make method static: a call's receiver has a type that would need a conversion to the new parameter, such as a type parameter. |
+| `not-movable` | Move static member: the member is not a static method, field, property, event or constant with its own declaration in a class, struct or record; or it is `partial`, `extern`, `abstract`, `virtual`, an `override`, or `Main`; or a reference to it is not written through a type name. |
+| `invalid-target` | Move static member: the target is not a class, struct or record with a body in the same project, is the member's own type, or is not a top-level static class for an extension method. |
+| `generic-type` | Move static member: the member's type or the target is generic, or nested in a generic type. |
+| `name-collision` | Move static member: the target already has a member with the name (other than method overloads), or the member would hide one of a base type of the target. |
+| `initialization-order` | Move static member: the member's initializer is not a constant, or the source or target has a static constructor or a static initializer that is not a constant, so static initialization would run at a different time. |
+| `lock-on-type` | Move static member: the member locks on its type object, with `[MethodImpl(MethodImplOptions.Synchronized)]` or `lock (typeof(...))`. |
+| `inaccessible` | Move static member: a reference could not access the member in the target, or the member's body could not access something from the target, with the current accessibility. |
 | `internal-verification-failed` | The tool's own check of its result failed. This is a bug in the tool; please report it. |

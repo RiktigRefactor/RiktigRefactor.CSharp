@@ -36,5 +36,12 @@ public static class RefusalCodes
     public const string ReceiverMayBeNull = "receiver-may-be-null";
     public const string ReceiverNotVariable = "receiver-not-variable";
     public const string UnsupportedReceiver = "unsupported-receiver";
+    public const string NotMovable = "not-movable";
+    public const string InvalidTarget = "invalid-target";
+    public const string GenericType = "generic-type";
+    public const string NameCollision = "name-collision";
+    public const string InitializationOrder = "initialization-order";
+    public const string LockOnType = "lock-on-type";
+    public const string Inaccessible = "inaccessible";
     public const string InternalVerificationFailed = "internal-verification-failed";
 }

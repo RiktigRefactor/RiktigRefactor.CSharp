@@ -25,12 +25,12 @@ public static class MethodTargets
         return symbol is IMethodSymbol method ? (IMethodSymbol)SymbolIdentity.Normalize(method) : null;
     }
 
-    /// <summary>Every source location that refers to <paramref name="method"/>, excluding its declaration.</summary>
-    public static async Task<List<Location>> FindReferenceLocationsAsync(Solution solution, IMethodSymbol method, CancellationToken cancellationToken)
+    /// <summary>Every source location that refers to <paramref name="member"/>, excluding its declaration.</summary>
+    public static async Task<List<Location>> FindReferenceLocationsAsync(Solution solution, ISymbol member, CancellationToken cancellationToken)
     {
-        var references = await SymbolFinder.FindReferencesAsync(method, solution, cancellationToken).ConfigureAwait(false);
+        var references = await SymbolFinder.FindReferencesAsync(member, solution, cancellationToken).ConfigureAwait(false);
         return [.. references
-            .Where(reference => SymbolEqualityComparer.Default.Equals(SymbolIdentity.Normalize(reference.Definition), method))
+            .Where(reference => SymbolEqualityComparer.Default.Equals(SymbolIdentity.Normalize(reference.Definition), member))
             .SelectMany(reference => reference.Locations)
             .Select(location => location.Location)
             .Where(location => location.IsInSource)
