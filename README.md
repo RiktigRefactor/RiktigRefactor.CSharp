@@ -1,4 +1,4 @@
-# RiktigRefactor.CSharp
+﻿# RiktigRefactor.CSharp
 
 [![Build and test](https://github.com/RiktigRefactor/riktigrefactor.csharp/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/RiktigRefactor/riktigrefactor.csharp/actions/workflows/build-and-test.yml)
 
@@ -12,8 +12,9 @@ The specification defines the correctness model, the refactorings, the JSON prot
 
 ## What it can do
 
-Rename is the first refactoring.
-It renames a symbol and every reference to it across a whole solution or project.
+The tool has two refactorings: Rename and Extract IIFE.
+
+Rename renames a symbol and every reference to it across a whole solution or project.
 
 After Roslyn computes the rename, the tool re-binds the result and checks that no reference changed which symbol it binds to.
 It refuses (exit code 1) when:
@@ -24,6 +25,29 @@ It refuses (exit code 1) when:
 - a name would be captured, or an overload resolution would change, in a way that is not fixed by qualifying the name;
 - a dynamically bound member access uses the old or new name;
 - a conditionally compiled (`#if`) region mentions the old or new name.
+
+Extract IIFE (also called extract static lambda) wraps a selected expression, or whole statements of one block, in an immediately-invoked `static` lambda:
+
+```csharp
+// Before
+var total = price * qty;
+
+// After
+var total = ((Func<decimal, int, decimal>)(static (price, qty) => price * qty))(price, qty);
+```
+
+Variables from outside become parameters, and `this` becomes a parameter named `@this`.
+Variables the statements assign and the code after them reads, or declare and the code after them uses, are returned in a tuple and assigned at the call site.
+It refuses when it can't prove that wrapping keeps behavior, for example when:
+
+- the selection contains `return`, `break`, `continue`, `goto`, `yield`, a label, or `await`;
+- the expression's meaning depends on its target type (`null`, a lambda, a constant converted implicitly, and the like), or it denotes a variable;
+- a variable crossing the boundary is captured by a lambda or local function, is a `ref` or primary constructor parameter, or is a struct that could be mutated without Roslyn counting it as a write;
+- the selection uses `base`, or `this` in a struct;
+- statements inside a `try` assign a variable that is read afterwards, because an exception would lose the assignment;
+- the selection is inside an expression tree or a query expression.
+
+After extracting, it checks that the result compiles and that every name binds as before.
 
 Each refusal has a code, listed in [refusal-codes.md](refusal-codes.md).
 
@@ -53,7 +77,15 @@ Positions are 1-based, and columns count Unicode scalar values.
 - `--apply` writes the changes to disk.
 - `--json` prints the result using the shared protocol, without the diff.
 
-The exit code is 0 on success, 1 when the rename is refused, and 2 on an error such as an unknown file.
+Preview an Extract IIFE of the text from line 12, column 19 up to (not including) column 30:
+
+```shell
+riktig-cs extract-iife --workspace App.sln --file src/Foo.cs --from 12:19 --to 12:30
+```
+
+The workspace must be restored (`dotnet restore`) so that types resolve; otherwise the tool refuses.
+
+The exit code is 0 on success, 1 when the refactoring is refused, and 2 on an error such as an unknown file.
 
 ## Build and test
 
@@ -62,7 +94,7 @@ It checks formatting and runs every test.
 Run `./tidy-code` to format the code.
 
 Test cases live in `RiktigRefactor.CSharp.Tests/Cases`, in the [format defined by the specification](https://github.com/RiktigRefactor/riktigrefactor.spec/blob/main/test-format.md).
-Every input and expected program is compiled and run, and edge cases must fail under a deliberately naive rename.
+Every input and expected program is compiled and run, and edge cases must fail under a deliberately naive implementation.
 
 ### Citing the C# specification
 
