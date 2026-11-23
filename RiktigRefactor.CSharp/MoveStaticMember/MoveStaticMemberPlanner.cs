@@ -29,7 +29,6 @@ public class MoveStaticMemberPlanner
     readonly bool _checkPreconditions;
     readonly CancellationToken _cancellationToken;
     readonly List<SourceEdit> _edits = [];
-    readonly List<(TextSpan Span, SourcePiece[] Pieces)> _editsInsideDeclaration = [];
     readonly List<(DocumentId Document, TextSpan Span)> _replacedQualifiers = [];
     Compilation? _compilation;
 
@@ -445,7 +444,7 @@ public class MoveStaticMemberPlanner
             moved.Add(new LiteralPiece(newline));
         }
 
-        moved.AddRange(PiecesWithEditsInside(TextSpan.FromBounds(firstLineStart, fullSpan.End)));
+        moved.Add(new CopyPiece(this._sourceDocument, TextSpan.FromBounds(firstLineStart, fullSpan.End)));
         if (!sourceText.ToString(fullSpan).EndsWith('\n'))
         {
             moved.Add(new LiteralPiece(newline));
@@ -516,37 +515,8 @@ public class MoveStaticMemberPlanner
                 continue;
             }
 
-            this._editsInsideDeclaration.Add((new TextSpan(line.Start, sourceIndent.Length), [new LiteralPiece(targetIndent)]));
+            this._edits.Add(SourceEdit.Replace(this._sourceDocument, new TextSpan(line.Start, sourceIndent.Length), new LiteralPiece(targetIndent)));
         }
-    }
-
-    /// <summary>The original text of <paramref name="span"/>, with the edits that fall inside the moved declaration applied.</summary>
-    List<SourcePiece> PiecesWithEditsInside(TextSpan span)
-    {
-        var pieces = new List<SourcePiece>();
-        var position = span.Start;
-        foreach (var (editSpan, editPieces) in this._editsInsideDeclaration.OrderBy(edit => edit.Span.Start).ThenBy(edit => edit.Span.Length))
-        {
-            if (editSpan.Start < position)
-            {
-                throw new InvalidOperationException($"Edits inside the moved declaration overlap at {editSpan}.");
-            }
-
-            if (editSpan.Start > position)
-            {
-                pieces.Add(new CopyPiece(this._sourceDocument, TextSpan.FromBounds(position, editSpan.Start)));
-            }
-
-            pieces.AddRange(editPieces);
-            position = editSpan.End;
-        }
-
-        if (position < span.End)
-        {
-            pieces.Add(new CopyPiece(this._sourceDocument, TextSpan.FromBounds(position, span.End)));
-        }
-
-        return pieces;
     }
 
     TypePiece TargetType(SemanticModel model, int position) => new(this._target.ToMinimalDisplayString(model, position), this._target);
@@ -554,18 +524,8 @@ public class MoveStaticMemberPlanner
     void Insert(DocumentId documentId, int position, params SourcePiece[] pieces)
         => Replace(documentId, new TextSpan(position, 0), pieces);
 
-    /// <summary>Edits inside the moved declaration go with it to the target; others stay where they are.</summary>
     void Replace(DocumentId documentId, TextSpan span, params SourcePiece[] pieces)
-    {
-        if (documentId == this._sourceDocument && this._declaration.FullSpan.Contains(span))
-        {
-            this._editsInsideDeclaration.Add((span, pieces));
-        }
-        else
-        {
-            this._edits.Add(SourceEdit.Replace(documentId, span, pieces));
-        }
-    }
+        => this._edits.Add(SourceEdit.Replace(documentId, span, pieces));
 
     static RefusalReason Refuse(string code, string message, Location? location, string? suggestion)
         => new(code, message, location is null ? null : Ranges.FromLocation(location), suggestion);
