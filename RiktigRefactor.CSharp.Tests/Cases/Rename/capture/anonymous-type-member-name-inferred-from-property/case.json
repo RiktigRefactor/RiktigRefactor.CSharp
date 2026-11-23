@@ -2,7 +2,6 @@
   "options": {
     "newName": "Title"
   },
-  "refuse": "binding-would-change",
   "naiveShouldFail": true,
   "spec": [
     "C# spec §12.8.17.7 Anonymous object creation expressions"

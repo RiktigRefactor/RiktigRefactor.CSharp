@@ -60,6 +60,15 @@ public static class RenameRefactoring
             return RefactoringResult.Refuse(preprocessorRefusal);
         }
 
+        var originalSolution = solution;
+        if (await InferredAnonymousMemberNames.MakeExplicitAsync(solution, target, cancellationToken).ConfigureAwait(false) is not { } withExplicitNames)
+        {
+            return RefactoringResult.Refuse(
+                RefusalCodes.InternalVerificationFailed,
+                "Naming inferred anonymous type members explicitly changed the anonymous types.");
+        }
+
+        (solution, target) = withExplicitNames;
         var errorsBefore = await ErrorCountsAsync(solution, cancellationToken).ConfigureAwait(false);
         var options = new SymbolRenameOptions(RenameOverloads: false, RenameInStrings: false, RenameInComments: false, RenameFile: false);
         var newSolution = await Renamer.RenameSymbolAsync(solution, target, options, unescapedNewName, cancellationToken).ConfigureAwait(false);
@@ -95,7 +104,7 @@ public static class RenameRefactoring
             return RefactoringResult.Refuse(fileRefusal);
         }
 
-        var edits = await Edits.ComputeAsync(solution, newSolution, cancellationToken).ConfigureAwait(false);
+        var edits = await Edits.ComputeAsync(originalSolution, newSolution, cancellationToken).ConfigureAwait(false);
         var warnings = await FindStringsMatchingNameAsync(solution, oldName, cancellationToken).ConfigureAwait(false);
         return new RefactoringResult(RefactoringStatus.Success, edits, warnings, []) { NewSolution = newSolution };
     }

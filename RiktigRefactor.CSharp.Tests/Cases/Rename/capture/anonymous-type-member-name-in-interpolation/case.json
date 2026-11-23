@@ -1,0 +1,10 @@
+{
+  "options": {
+    "newName": "Size"
+  },
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec §12.8.17.7 Anonymous object creation expressions"
+  ],
+  "notes": "The anonymous type is formatted through object, so no member access on it changes binding; only its inferred member name changes."
+}

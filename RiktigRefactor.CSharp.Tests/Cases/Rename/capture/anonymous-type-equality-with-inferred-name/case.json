@@ -1,0 +1,10 @@
+{
+  "options": {
+    "newName": "Size"
+  },
+  "naiveShouldFail": true,
+  "spec": [
+    "C# spec §12.8.17.7 Anonymous object creation expressions"
+  ],
+  "notes": "Anonymous types with different member names are different types, so they stop being equal."
+}

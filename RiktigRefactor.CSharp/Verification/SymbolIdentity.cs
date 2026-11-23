@@ -25,7 +25,7 @@ public static class SymbolIdentity
         var documentId = sourceLocation?.SourceTree is { } tree ? solution.GetDocumentId(tree) : null;
         if (sourceLocation is not null && documentId is not null)
         {
-            return SourceId(definition.Kind, documentId, sourceLocation.SourceSpan.Start);
+            return SourceId(definition, documentId, sourceLocation.SourceSpan.Start);
         }
 
         return $"metadata:{definition.Kind}:{definition.ContainingAssembly?.Identity.GetDisplayName()}:{definition.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}:{definition.GetDocumentationCommentId()}";
@@ -46,6 +46,31 @@ public static class SymbolIdentity
     public static DocumentId? RegularDocumentId(Solution solution, SyntaxTree? tree)
         => tree is not null && solution.GetDocument(tree) is { } document and not SourceGeneratedDocument ? document.Id : null;
 
-    public static string SourceId(SymbolKind kind, DocumentId documentId, int start)
-        => $"source:{kind}:{documentId.Id}:{start}";
+    /// <summary>
+    /// Identifies a declaration by its position. Anonymous types also include their member names,
+    /// since a different member name makes a different type at the same position.
+    /// </summary>
+    public static string SourceId(ISymbol definition, DocumentId documentId, int start)
+        => $"source:{definition.Kind}:{documentId.Id}:{start}{AnonymousTypeMemberNames(definition)}";
+
+    /// <summary>The name its declaring token has; anonymous types have none, so their <c>new</c> keyword stands in.</summary>
+    public static string DeclaringTokenText(ISymbol definition)
+    {
+        if (definition is INamedTypeSymbol { IsAnonymousType: true })
+        {
+            return "new";
+        }
+
+        return definition.Name;
+    }
+
+    static string AnonymousTypeMemberNames(ISymbol definition)
+    {
+        if (definition is not INamedTypeSymbol { IsAnonymousType: true } anonymousType)
+        {
+            return string.Empty;
+        }
+
+        return ":{" + string.Join(",", anonymousType.GetMembers().OfType<IPropertySymbol>().Select(property => property.Name)) + "}";
+    }
 }
