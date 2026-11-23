@@ -17,14 +17,7 @@ The tool has four refactorings: Rename, Extract IIFE, Make method static, and Mo
 Rename renames a symbol and every reference to it across a whole solution or project.
 
 After Roslyn computes the rename, the tool re-binds the result and checks that no reference changed which symbol it binds to.
-It refuses (exit code 1) when:
-
-- the new name is not a valid identifier, or is a keyword without an `@` escape;
-- the symbol is not declared in the workspace, or overrides or implements a member that is not;
-- the rename would introduce a compile error, or collide with an existing declaration;
-- a name would be captured, or an overload resolution would change, in a way that is not fixed by qualifying the name;
-- a dynamically bound member access uses the old or new name;
-- a conditionally compiled (`#if`) region mentions the old or new name.
+It refuses (exit code 1) when it can't prove the rename preserves behavior.
 
 Extract IIFE (also called extract static lambda) wraps a selected expression, or whole statements of one block, in an immediately-invoked `static` lambda:
 
@@ -38,15 +31,7 @@ var total = ((Func<decimal, int, decimal>)(static (price, qty) => price * qty))(
 
 Variables from outside become parameters, and `this` becomes a parameter named `@this`.
 Variables the statements assign and the code after them reads, or declare and the code after them uses, are returned in a tuple and assigned at the call site.
-It refuses when it can't prove that wrapping keeps behavior, for example when:
-
-- the selection contains `return`, `break`, `continue`, `goto`, `yield`, a label, or `await`;
-- the expression's meaning depends on its target type (`null`, a lambda, a constant converted implicitly, and the like), or it denotes a variable;
-- a variable crossing the boundary is captured by a lambda or local function, is a `ref` or primary constructor parameter, or is a struct that could be mutated without Roslyn counting it as a write;
-- the selection uses `base`, or `this` in a struct;
-- statements inside a `try` assign a variable that is read afterwards, because an exception would lose the assignment;
-- the selection is inside an expression tree or a query expression.
-
+It refuses when it can't prove that wrapping keeps behavior.
 After extracting, it checks that the result compiles and that every name binds as before.
 
 Make method static turns an instance method into a static method on the same type, with the receiver as a new first parameter, and rewrites every call:
@@ -62,26 +47,12 @@ var t = Order.Total(order, 3);
 ```
 
 A struct receiver is passed by `ref`, or by `in` when the method is `readonly` or the struct is a `readonly struct`.
-It refuses when, for example:
-
-- the method is `virtual`, `abstract`, an `override`, or implements an interface member;
-- the method is used as a method group, or called null-conditionally (`order?.Total(3)`);
-- a call's receiver can't be proven non-null (it must be `this`, a new object, a struct, or a local only ever assigned a new object), because a null receiver throws before the arguments' side effects would reach the body;
-- a struct receiver passed by `ref` is not a mutable variable, because the original call ran on a copy;
-- the body uses `base`, or a call is inside an expression tree or query;
-- a call to another overload would bind to the new static method.
+It refuses when it can't prove that every call keeps its behavior.
 
 Move static member moves a static method (including an extension method), field, property, event or constant to another class, struct or record in the same project, and updates every reference.
 References written through the source type, a subclass, or `using static`, and unqualified ones inside the source, become `Target.Member`.
 Names in the moved declaration that were found through the source's scope are qualified, such as `Source.Rate`.
-It refuses when, for example:
-
-- the source or the target is generic, since each constructed type has its own static state;
-- the member's initializer is not a constant, or the source or the target has a static constructor or a non-constant static initializer, since static initialization would run at a different time;
-- the target already has a member with that name (other than overloads), or the member would hide a member of the target's base type;
-- the member locks on its type object;
-- the move would need a change in accessibility;
-- any reference, including an overload elsewhere, would bind differently.
+It refuses when it can't prove that the move keeps behavior, including static initialization order.
 
 Each refusal has a code, listed in [refusal-codes.md](refusal-codes.md).
 
