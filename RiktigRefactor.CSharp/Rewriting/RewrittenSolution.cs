@@ -66,6 +66,7 @@ public class RewrittenSolution
             throw new InvalidOperationException("An edit falls inside another edit's deleted text without being inside a copy of it.");
         }
 
+        rewrite.CheckEveryOriginalCharacterAppearsOnce();
         rewrite.FileEdits = fileEdits;
         return rewrite;
     }
@@ -119,9 +120,27 @@ public class RewrittenSolution
         {
             for (var other = index + 1; other < copies.Count; other++)
             {
-                if (copies[index].Document == copies[other].Document && copies[index].Span.OverlapsWith(copies[other].Span))
+                var (first, second) = (copies[index].Span, copies[other].Span);
+                var isNested = first.Contains(second) || second.Contains(first);
+                if (copies[index].Document == copies[other].Document && first.OverlapsWith(second) && (!isNested || first == second))
                 {
-                    throw new InvalidOperationException($"Text {copies[index].Span} is copied twice.");
+                    throw new InvalidOperationException($"Text {first} is copied twice.");
+                }
+            }
+        }
+    }
+
+    /// <summary>A copy nested in another must be deleted inside it, or its text would appear twice.</summary>
+    void CheckEveryOriginalCharacterAppearsOnce()
+    {
+        foreach (var (document, segments) in this._segmentsByOldDocument)
+        {
+            var sorted = segments.OrderBy(segment => segment.OldStart).ToList();
+            for (var index = 1; index < sorted.Count; index++)
+            {
+                if (sorted[index].OldStart < sorted[index - 1].OldStart + sorted[index - 1].Length)
+                {
+                    throw new InvalidOperationException($"Original text at {sorted[index].OldStart} in {document} appears twice.");
                 }
             }
         }

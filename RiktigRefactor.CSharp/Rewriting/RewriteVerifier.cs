@@ -115,7 +115,7 @@ public class RewriteVerifier
             var document = this._rewrite.NewSolution.GetDocument(written.Document)!;
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             var model = (await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false))!;
-            var node = root!.FindNode(written.Span, getInnermostNodeForTie: false);
+            var node = root!.FindNode(written.Span, findInsideTrivia: true, getInnermostNodeForTie: false);
             var actual = node is TypeSyntax or ExpressionSyntax ? model.GetTypeInfo(node, cancellationToken).Type ?? model.GetSymbolInfo(node, cancellationToken).Symbol as ITypeSymbol : null;
             if (node.Span != written.Span || actual is null || DescribeType(actual) != DescribeType(written.Expected))
             {
