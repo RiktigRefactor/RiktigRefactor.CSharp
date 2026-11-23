@@ -12,7 +12,7 @@ The specification defines the correctness model, the refactorings, the JSON prot
 
 ## What it can do
 
-The tool has three refactorings: Rename, Extract IIFE, and Make method static.
+The tool has four refactorings: Rename, Extract IIFE, Make method static, and Move static member.
 
 Rename renames a symbol and every reference to it across a whole solution or project.
 
@@ -71,6 +71,18 @@ It refuses when, for example:
 - the body uses `base`, or a call is inside an expression tree or query;
 - a call to another overload would bind to the new static method.
 
+Move static member moves a static method (including an extension method), field, property, event or constant to another class, struct or record in the same project, and updates every reference.
+References written through the source type, a subclass, or `using static`, and unqualified ones inside the source, become `Target.Member`.
+Names in the moved declaration that were found through the source's scope are qualified, such as `Source.Rate`.
+It refuses when, for example:
+
+- the source or the target is generic, since each constructed type has its own static state;
+- the member's initializer is not a constant, or the source or the target has a static constructor or a non-constant static initializer, since static initialization would run at a different time;
+- the target already has a member with that name (other than overloads), or the member would hide a member of the target's base type;
+- the member locks on its type object;
+- the move would need a change in accessibility;
+- any reference, including an overload elsewhere, would bind differently.
+
 Each refusal has a code, listed in [refusal-codes.md](refusal-codes.md).
 
 See [limitations](https://github.com/RiktigRefactor/riktigrefactor.spec/blob/main/limitations.md) for what is out of scope, such as reflection, serialization by name, and updating comments and strings.
@@ -109,6 +121,12 @@ Make the method at line 5, column 20 static, naming its receiver parameter `self
 
 ```shell
 riktig-cs make-method-static --workspace App.sln --file src/Order.cs --at 5:20 --receiver-name self
+```
+
+Move the static member at line 8, column 27 to `Shop.Pricing`:
+
+```shell
+riktig-cs move-static-member --workspace App.sln --file src/Order.cs --at 8:27 --target Shop.Pricing
 ```
 
 The workspace must be restored (`dotnet restore`) so that types resolve; otherwise the tool refuses.
