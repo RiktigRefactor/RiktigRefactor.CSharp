@@ -25,6 +25,8 @@ It refuses (exit code 1) when:
 - a dynamically bound member access uses the old or new name;
 - a conditionally compiled (`#if`) region mentions the old or new name.
 
+Each refusal has a code, listed in [refusal-codes.md](refusal-codes.md).
+
 See [limitations](https://github.com/RiktigRefactor/riktigrefactor.spec/blob/main/limitations.md) for what is out of scope, such as reflection, serialization by name, and updating comments and strings.
 Rename warns when a string literal equals the old name.
 
@@ -61,6 +63,12 @@ Run `./tidy-code` to format the code.
 
 Test cases live in `RiktigRefactor.CSharp.Tests/Cases`, in the [format defined by the specification](https://github.com/RiktigRefactor/riktigrefactor.spec/blob/main/test-format.md).
 Every input and expected program is compiled and run, and edge cases must fail under a deliberately naive rename.
+
+### Citing the C# specification
+
+Every test case lists the language-specification sections it covers in its `spec` field, written as `C# spec §<number> <title>`, for example `C# spec §12.6.4 Overload resolution`.
+The numbers and titles follow the C# standard draft published at [learn.microsoft.com](https://learn.microsoft.com/dotnet/csharp/language-reference/language-specification/), which comes from the [csharpstandard](https://github.com/dotnet/csharpstandard) repository, at its `alpha-v13` numbering.
+Features that are not in the standard yet are cited as `C# feature: <name>`.
 
 ## Contributing
 
