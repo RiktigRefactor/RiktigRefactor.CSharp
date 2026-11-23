@@ -41,6 +41,14 @@ If the change has more than one thing going on, split it into multiple commits, 
 Especially separate refactoring from behavior changes.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit notation convention.
 
+## Cloud sessions
+
+- `gh pr create` is blocked in cloud sessions (it uses GraphQL).
+  Open pull requests with `gh api repos/OWNER/REPO/pulls -f title=... -f head=... -f base=main -f body=...`.
+- Cloud sessions reach the network only through an allowlisting proxy.
+  Hosts needed: NuGet (`api.nuget.org`, `*.nuget.org`), PyPI (`pypi.org`, `files.pythonhosted.org`), and LLVM (`apt.llvm.org`, `github.com` for LLVM release downloads).
+- Cloud sessions need both the .NET 11 SDK and the .NET 10 runtime, because the tests target `net10.0`.
+
 ## After every task
 
 At the end of every task report on all of these, briefly:
