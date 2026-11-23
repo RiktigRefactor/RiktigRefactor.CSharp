@@ -12,7 +12,7 @@ The specification defines the correctness model, the refactorings, the JSON prot
 
 ## What it can do
 
-The tool has four refactorings: Rename, Extract IIFE, Make method static, and Move static member.
+The tool has five refactorings: Rename, Extract IIFE, Make method static, Move static member, and Move static method to instance method.
 
 Rename renames a symbol and every reference to it across a whole solution or project.
 
@@ -53,6 +53,20 @@ Move static member moves a static method (including an extension method), field,
 References written through the source type, a subclass, or `using static`, and unqualified ones inside the source, become `Target.Member`.
 Names in the moved declaration that were found through the source's scope are qualified, such as `Source.Rate`.
 It refuses when it can't prove that the move keeps behavior, including static initialization order.
+
+Move static method to instance method is the inverse of Make method static: a parameter of a class type becomes the receiver, the method moves into that class, and every call passes the argument as the receiver:
+
+```csharp
+// Before
+public static class Pricing { public static decimal Total(Order order, int qty) => order.Price * qty; }
+var t = Pricing.Total(order, 3);
+
+// After
+public class Order { public decimal Total(int qty) => this.Price * qty; }
+var t = order.Total(3);
+```
+
+It refuses when it can't prove that every call keeps its behavior, including when a receiver might be null or would be evaluated earlier.
 
 Each refusal has a code, listed in [refusal-codes.md](refusal-codes.md).
 
@@ -98,6 +112,12 @@ Move the static member at line 8, column 27 to `Shop.Pricing`:
 
 ```shell
 riktig-cs move-static-member --workspace App.sln --file src/Order.cs --at 8:27 --target Shop.Pricing
+```
+
+Make the static method at line 3, column 27 an instance method on its `order` parameter's type:
+
+```shell
+riktig-cs move-to-instance-method --workspace App.sln --file src/Pricing.cs --at 3:27 --receiver order
 ```
 
 The workspace must be restored (`dotnet restore`) so that types resolve; otherwise the tool refuses.
