@@ -3,7 +3,7 @@ using RiktigRefactor.CSharp.Tests.Infrastructure;
 
 namespace RiktigRefactor.CSharp.Tests;
 
-public class RenameCaseCoverageTests
+public class CaseCoverageTests
 {
     [Fact]
     public void EveryRenameCaseDirectoryHasATest()
@@ -11,6 +11,18 @@ public class RenameCaseCoverageTests
         var testSource = string.Concat(Directory.EnumerateFiles(TestsDirectory(), "*RenameCaseTests.cs").Select(File.ReadAllText));
 
         var untested = TestCase.FindDirectories("Rename")
+            .Where(directory => !testSource.Contains($"InDirectory(\"{directory}\")", StringComparison.Ordinal))
+            .ToList();
+
+        Assert.Empty(untested);
+    }
+
+    [Fact]
+    public void EveryExtractIifeCaseDirectoryHasATest()
+    {
+        var testSource = string.Concat(Directory.EnumerateFiles(TestsDirectory(), "*ExtractIifeCaseTests.cs").Select(File.ReadAllText));
+
+        var untested = TestCase.FindDirectories("ExtractIife")
             .Where(directory => !testSource.Contains($"InDirectory(\"{directory}\")", StringComparison.Ordinal))
             .ToList();
 
