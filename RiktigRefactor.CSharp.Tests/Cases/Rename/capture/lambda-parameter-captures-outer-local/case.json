@@ -5,8 +5,8 @@
   "refuse": "binding-would-change",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a77.7 Scopes",
-    "C# spec \u00a712.19 Anonymous function expressions"
+    "C# spec \u00a77.6 Scopes",
+    "C# spec \u00a712.22 Anonymous function expressions"
   ],
   "notes": "A lambda parameter may shadow an outer local, so the rename compiles but the inner reference to the local would bind to the parameter. A local cannot be qualified, so the tool must refuse."
 }

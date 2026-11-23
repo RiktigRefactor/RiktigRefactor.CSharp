@@ -5,7 +5,7 @@
   "refuse": "would-introduce-errors",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec §12.8.6 Tuple expressions"
+    "C# spec §12.8.6 Tuple literals"
   ],
   "notes": "The tuple element name is inferred from the local, so renaming the local renames the element and breaks t.count."
 }

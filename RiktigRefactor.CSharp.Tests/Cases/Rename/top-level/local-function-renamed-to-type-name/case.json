@@ -4,7 +4,7 @@
   },
   "naiveShouldFail": true,
   "spec": [
-    "C# spec §7.1.3 Top-level statements"
+    "C# spec §7.1.3 Using top-level statements"
   ],
   "notes": "A top-level local function shadows a type of the same name, so the type must be qualified with global::."
 }

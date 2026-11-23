@@ -3,7 +3,7 @@
     "newName": "Invoke"
   },
   "spec": [
-    "C# spec \u00a722.5.6 Caller-info attributes"
+    "C# spec \u00a723.5.6 Caller-info attributes"
   ],
   "notes": "The compiler recomputes the caller name, so the reflection lookup keeps working. Like nameof, the string changes by design."
 }

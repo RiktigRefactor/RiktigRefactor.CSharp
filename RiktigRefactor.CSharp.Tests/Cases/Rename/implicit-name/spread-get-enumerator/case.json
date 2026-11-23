@@ -5,7 +5,7 @@
   "refuse": "binding-would-change",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a712.8.21 Collection expressions"
+    "C# spec \u00a712.8.25 Collection expressions"
   ],
   "notes": "A spread element in a collection expression enumerates with GetEnumerator looked up by name, so the renamed instance method would capture it from the extension."
 }

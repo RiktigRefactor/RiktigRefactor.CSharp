@@ -5,6 +5,6 @@
   "refuse": "conflicting-declaration",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a77.7 Scopes"
+    "C# spec \u00a77.6 Scopes"
   ]
 }

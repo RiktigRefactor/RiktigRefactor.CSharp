@@ -4,7 +4,7 @@
   },
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a77.7 Scopes",
+    "C# spec \u00a77.6 Scopes",
     "C# spec \u00a715.2.3 Type parameters"
   ],
   "notes": "Renaming T to Item would make `new Item()` create a T instead; it compiles and silently changes the result."

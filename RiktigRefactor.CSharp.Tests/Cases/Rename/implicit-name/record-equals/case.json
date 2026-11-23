@@ -5,7 +5,7 @@
   "refuse": "binding-would-change",
   "naiveShouldFail": true,
   "spec": [
-    "C# spec \u00a715.16 Records"
+    "C# spec \u00a715.16 Record classes"
   ],
   "notes": "A record uses a user-declared Equals(R) in place of the synthesized one, and == calls it without naming it."
 }
