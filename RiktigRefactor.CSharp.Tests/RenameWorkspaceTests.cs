@@ -117,6 +117,19 @@ public class RenameWorkspaceTests
     }
 
     [Fact]
+    public async Task RefusesWhenTheRenameChangesGeneratedOutputWithoutMentioningEitherName()
+    {
+        var solution = ProjectWithGenerator("partial class Program { static void Helper() { } static void Main() { Helper(); } }", "// unused");
+        var project = solution.Projects.Single();
+        solution = solution.AddAdditionalDocument(DocumentId.CreateNewId(project.Id), "MemberNames.marker", SourceText.From(""), filePath: "MemberNames.marker");
+
+        var result = await RenameAtAsync(solution, "Program.cs", "Helper", "Renamed");
+
+        Assert.Equal(RefactoringStatus.Refused, result.Status);
+        Assert.Equal(RefusalCodes.BindingWouldChange, Assert.Single(result.Reasons).Code);
+    }
+
+    [Fact]
     public async Task RefusesToRenameASymbolDeclaredInGeneratedCode()
     {
         var solution = ProjectWithGenerator(
