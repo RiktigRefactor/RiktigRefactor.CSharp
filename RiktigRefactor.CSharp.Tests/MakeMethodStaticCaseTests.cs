@@ -137,6 +137,15 @@ public class MakeMethodStaticCaseTests
             .NaiveShouldFail()
             .RunAsync();
 
+    // Only `Order.cs` changes, but the call in `Program.cs` would bind to the new static overload.
+    [Fact]
+    [Spec("C# spec §12.6.4 Overload resolution")]
+    public Task OverloadCapturedInOtherFile()
+        => MakeMethodStaticCase.InDirectory("refuse/overload-captured-in-other-file")
+            .ExpectRefusal("binding-would-change")
+            .NaiveShouldFail()
+            .RunAsync();
+
     [Fact]
     [Spec("C# spec §15.6.1 General")]
     public Task ConflictingOverload()

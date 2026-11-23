@@ -43,11 +43,12 @@ public class RewriteVerifier
     /// <summary>The display of a type that two compilations agree on exactly when they denote the same type.</summary>
     public static string DescribeType(ITypeSymbol type) => $"{type.ToDisplayString(TypeFormat)}@{type.OriginalDefinition.ContainingAssembly?.Name}";
 
+    /// <summary>Checks every original name in the solution, since an unchanged file can see a new overload or a moved member.</summary>
     async Task<RefusalReason?> FindOriginalNameProblemAsync(CancellationToken cancellationToken)
     {
-        foreach (var documentId in this._rewrite.ChangedDocuments)
+        foreach (var oldDocument in this._rewrite.OldSolution.Projects.SelectMany(project => project.Documents))
         {
-            var oldDocument = this._rewrite.OldSolution.GetDocument(documentId)!;
+            var documentId = oldDocument.Id;
             var oldModel = (await oldDocument.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false))!;
             var oldRoot = await oldDocument.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
             foreach (var oldName in oldRoot!.DescendantNodes(descendIntoTrivia: true).OfType<SimpleNameSyntax>())
