@@ -140,6 +140,7 @@ public static class RenamePreconditions
     /// (collection initializers, foreach, await, deconstruction, query expressions, and the like) and the workspace uses that construct.
     /// Records count too: a user-declared Equals, GetHashCode, ToString, PrintMembers, or Deconstruct replaces the one the compiler would synthesize.
     /// Those lookups have no name in the source, so the binding verifier can't see them change.
+    /// A construct whose lookup can't reach the renamed member (by the type it looks the name up on) is ignored; see <see cref="PatternLookupScope"/>.
     /// </summary>
     public static async Task<RefusalReason?> FindPatternBasedUseAsync(
         Solution solution,
@@ -159,10 +160,15 @@ public static class RenamePreconditions
             return null;
         }
 
+        var renamedMemberTypes = PatternLookupScope.ContainingTypesOfRenamedMembers(symbol, RelatedMembers(symbol));
         foreach (var document in solution.Projects.SelectMany(project => project.Documents))
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-            var use = root?.DescendantNodes().FirstOrDefault(node => UsesPatternName(node, oldName) || UsesPatternName(node, newName));
+            var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+            bool MayFindRenamedMember(SyntaxNode node, string name)
+                => UsesPatternName(node, name) && PatternLookupScope.MayFind(model!, node, name, renamedMemberTypes, cancellationToken);
+
+            var use = root?.DescendantNodes().FirstOrDefault(node => MayFindRenamedMember(node, oldName) || MayFindRenamedMember(node, newName));
             if (use is not null)
             {
                 return new RefusalReason(

@@ -143,4 +143,33 @@ public class ImplicitNameRenameCaseTests
             .ExpectRefusal("binding-would-change")
             .NaiveShouldFail()
             .RunAsync();
+
+    // Bag's collection initializer looks Add up on Bag and its base types, and a Bag.Add(int) would be chosen over Base.Add(object).
+    [Fact]
+    [Spec("C# spec §12.8.17.2.3 Collection initializers")]
+    [Spec("C# spec §12.5 Member lookup")]
+    public Task CollectionInitializerOnDerivedType()
+        => RenameCase.InDirectory("implicit-name/collection-initializer-on-derived-type")
+            .RenameTo("Add")
+            .ExpectRefusal("binding-would-change")
+            .NaiveShouldFail()
+            .RunAsync();
+
+    // Renaming to Add is safe when no collection initializer creates an Inventory: List<int> looks Add up only on itself and its base types.
+    [Fact]
+    [Spec("C# spec §12.8.17.2.3 Collection initializers")]
+    [Spec("C# spec §12.5 Member lookup")]
+    public Task UnrelatedCollectionInitializer()
+        => RenameCase.InDirectory("implicit-name/unrelated-collection-initializer")
+            .RenameTo("Add")
+            .RunAsync();
+
+    // Renaming to MoveNext is safe when no foreach enumerates a Counter.
+    [Fact]
+    [Spec("C# spec §13.9.5 The foreach statement")]
+    [Spec("C# spec §12.5 Member lookup")]
+    public Task UnrelatedForEach()
+        => RenameCase.InDirectory("implicit-name/unrelated-foreach")
+            .RenameTo("MoveNext")
+            .RunAsync();
 }
