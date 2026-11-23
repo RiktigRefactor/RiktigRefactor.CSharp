@@ -2,7 +2,7 @@
 using RiktigRefactor.CSharp.Tool;
 
 var workspaceOption = new Option<string>("--workspace") { Description = "The .sln, .slnx or .csproj to load.", Required = true };
-var fileOption = new Option<string>("--file") { Description = "The file containing the symbol.", Required = true };
+var fileOption = new Option<string>("--file") { Description = "The file containing the symbol or selection.", Required = true };
 var atOption = new Option<string>("--at") { Description = "The cursor position as line:column, both 1-based.", Required = true };
 var newNameOption = new Option<string>("--new-name") { Description = "The new identifier.", Required = true };
 var applyOption = new Option<bool>("--apply") { Description = "Write the changes to disk instead of only previewing them." };
@@ -29,7 +29,30 @@ renameCommand.SetAction((parseResult, cancellationToken) => RenameCommand.RunAsy
     Console.Error,
     cancellationToken));
 
-var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand };
+var fromOption = new Option<string>("--from") { Description = "The start of the selection as line:column, both 1-based.", Required = true };
+var toOption = new Option<string>("--to") { Description = "The end of the selection (exclusive) as line:column, both 1-based.", Required = true };
+var extractIifeCommand = new Command("extract-iife", "Wrap the selected expression or statements in an immediately-invoked static lambda. Exits 0 on success, 1 when refused, 2 on error.")
+{
+    workspaceOption,
+    fileOption,
+    fromOption,
+    toOption,
+    applyOption,
+    jsonOption,
+};
+extractIifeCommand.SetAction((parseResult, cancellationToken) => ExtractIifeCommand.RunAsync(
+    new ExtractIifeArguments(
+        parseResult.GetRequiredValue(workspaceOption),
+        parseResult.GetRequiredValue(fileOption),
+        parseResult.GetRequiredValue(fromOption),
+        parseResult.GetRequiredValue(toOption),
+        parseResult.GetValue(applyOption),
+        parseResult.GetValue(jsonOption)),
+    Console.Out,
+    Console.Error,
+    cancellationToken));
+
+var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand, extractIifeCommand };
 var parseResult = rootCommand.Parse(args);
 var exitCode = await parseResult.InvokeAsync();
 return parseResult.Errors.Count > 0 ? RefactoringCommand.ExitError : exitCode;
