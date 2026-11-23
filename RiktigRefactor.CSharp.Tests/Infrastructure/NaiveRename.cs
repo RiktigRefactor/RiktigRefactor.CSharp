@@ -30,10 +30,16 @@ public static class NaiveRename
         foreach (var group in locations.Distinct().GroupBy(location => solution.GetDocumentId(location.SourceTree)!))
         {
             var text = await solution.GetDocument(group.Key)!.GetTextAsync().ConfigureAwait(false);
-            var changes = group.Select(location => new TextChange(location.SourceSpan, newName));
+            var changes = group
+                .Where(location => SpellsName(text.ToString(location.SourceSpan), symbol.Name))
+                .Select(location => new TextChange(location.SourceSpan, newName));
             solution = solution.WithDocumentText(group.Key, text.WithChanges(changes));
         }
 
         return solution;
     }
+
+    /// <summary>Implicit references (such as the <c>using</c> keyword standing for a Dispose call) don't spell the name, and overwriting them with the new name would break the syntax for a reason unrelated to the edge case.</summary>
+    static bool SpellsName(string text, string name)
+        => text.TrimStart('@') == name || name == text.TrimStart('@') + "Attribute";
 }
