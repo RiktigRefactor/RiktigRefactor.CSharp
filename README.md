@@ -1,4 +1,4 @@
-﻿# RiktigRefactor.CSharp
+# RiktigRefactor.CSharp
 
 [![Build and test](https://github.com/RiktigRefactor/RiktigRefactor.CSharp/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/RiktigRefactor/RiktigRefactor.CSharp/actions/workflows/build-and-test.yml)
 ![Status: early development](https://img.shields.io/badge/status-early%20development-orange)
