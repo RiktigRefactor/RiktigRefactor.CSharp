@@ -2,12 +2,12 @@
 using RiktigRefactor.CSharp.Protocol;
 using RiktigRefactor.CSharp.Rewriting;
 
-namespace RiktigRefactor.CSharp.MoveToInstanceMethod;
+namespace RiktigRefactor.CSharp.ConvertToInstanceMethod;
 
 /// <summary>
-/// Move static method to instance method: turns a static method into an instance method on the type of one of its parameters, which becomes <c>this</c>.
+/// Convert static method to instance method: turns a static method into an instance method on the type of one of its parameters, which becomes <c>this</c>.
 /// </summary>
-public static class MoveToInstanceMethodRefactoring
+public static class ConvertToInstanceMethodRefactoring
 {
     /// <summary>Compiler errors that mean the method collides with a declaration in its new type, or that something can't be accessed from its new place.</summary>
     static readonly Dictionary<string, string> RefusalCodesForErrors = new(StringComparer.Ordinal)
@@ -27,7 +27,7 @@ public static class MoveToInstanceMethodRefactoring
         string receiverName,
         CancellationToken cancellationToken = default)
     {
-        var (plan, refusal) = await MoveToInstanceMethodPlanner.PlanAsync(solution, documentId, position, receiverName, checkPreconditions: true, cancellationToken).ConfigureAwait(false);
+        var (plan, refusal) = await ConvertToInstanceMethodPlanner.PlanAsync(solution, documentId, position, receiverName, checkPreconditions: true, cancellationToken).ConfigureAwait(false);
         if (refusal is not null)
         {
             return RefactoringResult.Refuse(refusal);

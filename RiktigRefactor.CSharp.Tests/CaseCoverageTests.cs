@@ -32,7 +32,7 @@ public class CaseCoverageTests
     [Theory]
     [InlineData("MakeMethodStatic")]
     [InlineData("MoveStaticMember")]
-    [InlineData("MoveToInstanceMethod")]
+    [InlineData("ConvertToInstanceMethod")]
     public void EveryCaseDirectoryHasATest(string refactoring)
     {
         var testSource = string.Concat(Directory.EnumerateFiles(TestsDirectory(), $"*{refactoring}CaseTests.cs").Select(File.ReadAllText));

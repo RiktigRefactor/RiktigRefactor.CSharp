@@ -17,7 +17,7 @@ This is the C# implementation of the [RiktigRefactor specification](https://gith
     * [Extract IIFE](#extract-iife)
     * [Make method static](#make-method-static)
     * [Move static member](#move-static-member)
-    * [Move static method to instance method](#move-static-method-to-instance-method)
+    * [Convert static method to instance method](#convert-static-method-to-instance-method)
   * [Using it](#using-it)
   * [Building and testing](#building-and-testing)<!-- endToc -->
 
@@ -109,9 +109,9 @@ var t = Pricing.Total(order, 3);
 
 See more details in [docs/move-static-member.md](docs/move-static-member.md).
 
-### Move static method to instance method
+### Convert static method to instance method
 
-Move static method to instance method is the inverse of Make method static: a parameter of a class type becomes the receiver, the method moves into that class, and every call passes the argument as the receiver.
+Convert static method to instance method is the inverse of Make method static: a parameter of a class type becomes the receiver, the method moves into that class, and every call passes the argument as the receiver.
 
 #### Before
 
@@ -127,7 +127,7 @@ public class Order { public decimal Total(int qty) => this.Price * qty; }
 var t = order.Total(3);
 ```
 
-See more details in [docs/move-to-instance-method.md](docs/move-to-instance-method.md).
+See more details in [docs/convert-to-instance-method.md](docs/convert-to-instance-method.md).
 
 ## Using it
 

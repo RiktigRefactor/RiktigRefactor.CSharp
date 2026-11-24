@@ -4,8 +4,8 @@ using RiktigRefactor.CSharp.Tool;
 
 namespace RiktigRefactor.CSharp.Tests;
 
-/// <summary>Runs the move-to-instance-method command logic against a small restored project on disk.</summary>
-public class MoveToInstanceMethodCommandTests : IDisposable
+/// <summary>Runs the convert-to-instance-method command logic against a small restored project on disk.</summary>
+public class ConvertToInstanceMethodCommandTests : IDisposable
 {
     const string ProjectFile = """
         <Project Sdk="Microsoft.NET.Sdk">
@@ -93,8 +93,8 @@ public class MoveToInstanceMethodCommandTests : IDisposable
     {
         using var output = new StringWriter();
         using var error = new StringWriter();
-        var arguments = new MoveToInstanceMethodArguments(PathOf("Sample.csproj"), PathOf("Program.cs"), at, receiver, apply, json);
-        var exitCode = await MoveToInstanceMethodCommand.RunAsync(arguments, output, error, TestContext.Current.CancellationToken);
+        var arguments = new ConvertToInstanceMethodArguments(PathOf("Sample.csproj"), PathOf("Program.cs"), at, receiver, apply, json);
+        var exitCode = await ConvertToInstanceMethodCommand.RunAsync(arguments, output, error, TestContext.Current.CancellationToken);
         return (exitCode, output.ToString(), error.ToString());
     }
 }

@@ -1,6 +1,6 @@
-# Move static method to instance method
+# Convert static method to instance method
 
-Move static method to instance method is the inverse of Make method static: a parameter of a class type becomes the receiver, the method moves into that class, and every call passes the argument as the receiver.
+Convert static method to instance method is the inverse of Make method static: a parameter of a class type becomes the receiver, the method moves into that class, and every call passes the argument as the receiver.
 
 ```csharp
 // Before
@@ -19,7 +19,7 @@ It refuses when it can't prove that every call keeps its behavior, including whe
 Make the static method at line 3, column 27 an instance method on its `order` parameter's type:
 
 ```shell
-riktig-cs move-to-instance-method --workspace App.sln --file src/Pricing.cs --at 3:27 --receiver order
+riktig-cs convert-to-instance-method --workspace App.sln --file src/Pricing.cs --at 3:27 --receiver order
 ```
 
 See [the command line](command-line.md) for the options every command accepts.

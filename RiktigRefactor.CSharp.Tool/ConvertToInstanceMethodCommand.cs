@@ -1,14 +1,14 @@
-﻿using RiktigRefactor.CSharp.MoveToInstanceMethod;
+﻿using RiktigRefactor.CSharp.ConvertToInstanceMethod;
 using RiktigRefactor.CSharp.Verification;
 
 namespace RiktigRefactor.CSharp.Tool;
 
-public static class MoveToInstanceMethodCommand
+public static class ConvertToInstanceMethodCommand
 {
-    public static Task<int> RunAsync(MoveToInstanceMethodArguments arguments, TextWriter standardOutput, TextWriter standardError, CancellationToken cancellationToken)
+    public static Task<int> RunAsync(ConvertToInstanceMethodArguments arguments, TextWriter standardOutput, TextWriter standardError, CancellationToken cancellationToken)
         => RefactoringCommand.RunAsync(
             new CommonArguments(arguments.Workspace, arguments.File, arguments.Apply, arguments.Json),
-            (document, text, token) => MoveToInstanceMethodRefactoring.MoveAsync(
+            (document, text, token) => ConvertToInstanceMethodRefactoring.MoveAsync(
                 document.Project.Solution,
                 document.Id,
                 Ranges.ToOffset(text, RefactoringCommand.ParsePosition(arguments.At)),

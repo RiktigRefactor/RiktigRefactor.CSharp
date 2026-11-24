@@ -8,14 +8,14 @@ using RiktigRefactor.CSharp.Protocol;
 using RiktigRefactor.CSharp.Rewriting;
 using RiktigRefactor.CSharp.Verification;
 
-namespace RiktigRefactor.CSharp.MoveToInstanceMethod;
+namespace RiktigRefactor.CSharp.ConvertToInstanceMethod;
 
 /// <summary>
-/// Plans Move static method to instance method: the method moves into its receiver parameter's type, the parameter becomes <c>this</c>,
+/// Plans Convert static method to instance method: the method moves into its receiver parameter's type, the parameter becomes <c>this</c>,
 /// and every call <c>S.M(a, recv, b)</c> becomes <c>recv.M(a, b)</c>.
 /// With <c>checkPreconditions</c> off it writes what it can and skips every check, for the naive implementation the tests compare against.
 /// </summary>
-public class MoveToInstanceMethodPlanner
+public class ConvertToInstanceMethodPlanner
 {
     readonly Solution _solution;
     readonly IMethodSymbol _method;
@@ -30,7 +30,7 @@ public class MoveToInstanceMethodPlanner
     readonly List<(DocumentId Document, TextSpan Span)> _deletedSpans = [];
     readonly HashSet<TextSpan> _receiverParameterPassedAsReceiver = [];
 
-    MoveToInstanceMethodPlanner(Solution solution, IMethodSymbol method, IParameterSymbol receiver, MethodDeclarationSyntax declaration, TypeDeclarationSyntax targetDeclaration, bool checkPreconditions, CancellationToken cancellationToken)
+    ConvertToInstanceMethodPlanner(Solution solution, IMethodSymbol method, IParameterSymbol receiver, MethodDeclarationSyntax declaration, TypeDeclarationSyntax targetDeclaration, bool checkPreconditions, CancellationToken cancellationToken)
     {
         this._solution = solution;
         this._method = method;
@@ -43,7 +43,7 @@ public class MoveToInstanceMethodPlanner
         this._cancellationToken = cancellationToken;
     }
 
-    public static async Task<(MoveToInstanceMethodPlan? Plan, RefusalReason? Refusal)> PlanAsync(
+    public static async Task<(ConvertToInstanceMethodPlan? Plan, RefusalReason? Refusal)> PlanAsync(
         Solution solution,
         DocumentId documentId,
         int position,
@@ -81,9 +81,9 @@ public class MoveToInstanceMethodPlanner
         }
 
         var declaration = (MethodDeclarationSyntax)method.DeclaringSyntaxReferences[0].GetSyntax(cancellationToken);
-        var planner = new MoveToInstanceMethodPlanner(solution, method, receiver, declaration, targetDeclaration, checkPreconditions, cancellationToken);
+        var planner = new ConvertToInstanceMethodPlanner(solution, method, receiver, declaration, targetDeclaration, checkPreconditions, cancellationToken);
         var refusal = await planner.PlanAsync().ConfigureAwait(false);
-        return refusal is null ? (new MoveToInstanceMethodPlan(method, planner._edits, planner._deletedSpans), null) : (null, refusal);
+        return refusal is null ? (new ConvertToInstanceMethodPlan(method, planner._edits, planner._deletedSpans), null) : (null, refusal);
     }
 
     static RefusalReason? FindUnsupportedMethod(IMethodSymbol method, CancellationToken cancellationToken)
