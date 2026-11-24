@@ -19,8 +19,7 @@ This is the C# implementation of the [RiktigRefactor specification](https://gith
     * [Move static member](#move-static-member)
     * [Move static method to instance method](#move-static-method-to-instance-method)
   * [Using it](#using-it)
-  * [Building and testing](#building-and-testing)
-  * [Contributing](#contributing)<!-- endToc -->
+  * [Building and testing](#building-and-testing)<!-- endToc -->
 
 ## What it can do
 
@@ -88,14 +87,8 @@ See [the command line](docs/command-line.md) for the options, exit codes and ref
 
 ## Building and testing
 
-Install [Git](https://git-scm.com/) and [Mise](https://mise.jdx.dev/); Mise provides everything else.
-
 ```shell
 ./build-and-test
 ```
 
-See [building and testing](docs/building-and-testing.md) for the toolchain, the test cases, and how they cite the C# specification.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit message convention, and [AGENTS.md](AGENTS.md) for how the repo is organized.
+For more information, see [CONTRIBUTING.md](CONTRIBUTING.md).
