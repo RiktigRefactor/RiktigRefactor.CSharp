@@ -23,7 +23,7 @@ This is the C# implementation of the [RiktigRefactor specification](https://gith
 
 ## What it can do
 
-The tool has five refactorings: Rename, Extract IIFE, Make method static, Move static member, and Move static method to instance method.
+The tool has these refactorings:
 
 ### Rename
 
@@ -55,11 +55,37 @@ See more details in [docs/rename.md](docs/rename.md).
 
 Extract IIFE (also called extract static lambda) wraps a selected expression, or whole statements of one block, in an immediately-invoked `static` lambda.
 
+#### Before
+
+```csharp
+var total = price * qty;
+```
+
+#### After
+
+```csharp
+var total = ((Func<decimal, int, decimal>)(static (price, qty) => price * qty))(price, qty);
+```
+
 See more details in [docs/extract-iife.md](docs/extract-iife.md).
 
 ### Make method static
 
 Make method static turns an instance method into a static method on the same type, with the receiver as a new first parameter, and rewrites every call.
+
+#### Before
+
+```csharp
+public decimal Total(int qty) => price * qty;
+var t = order.Total(3);
+```
+
+#### After
+
+```csharp
+public static decimal Total(Order order, int qty) => order.price * qty;
+var t = Order.Total(order, 3);
+```
 
 See more details in [docs/make-method-static.md](docs/make-method-static.md).
 
@@ -67,11 +93,39 @@ See more details in [docs/make-method-static.md](docs/make-method-static.md).
 
 Move static member moves a static method (including an extension method), field, property, event or constant to another class, struct or record in the same project, and updates every reference.
 
+#### Before
+
+```csharp
+class Order { public static decimal Total(Order order, int qty) => order.Price * qty; }
+var t = Order.Total(order, 3);
+```
+
+#### After
+
+```csharp
+class Pricing { public static decimal Total(Order order, int qty) => order.Price * qty; }
+var t = Pricing.Total(order, 3);
+```
+
 See more details in [docs/move-static-member.md](docs/move-static-member.md).
 
 ### Move static method to instance method
 
 Move static method to instance method is the inverse of Make method static: a parameter of a class type becomes the receiver, the method moves into that class, and every call passes the argument as the receiver.
+
+#### Before
+
+```csharp
+public static class Pricing { public static decimal Total(Order order, int qty) => order.Price * qty; }
+var t = Pricing.Total(order, 3);
+```
+
+#### After
+
+```csharp
+public class Order { public decimal Total(int qty) => this.Price * qty; }
+var t = order.Total(3);
+```
 
 See more details in [docs/move-to-instance-method.md](docs/move-to-instance-method.md).
 
