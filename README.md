@@ -1,144 +1,101 @@
 ﻿# RiktigRefactor.CSharp
 
-[![Build and test](https://github.com/RiktigRefactor/riktigrefactor.csharp/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/RiktigRefactor/riktigrefactor.csharp/actions/workflows/build-and-test.yml)
+[![Build and test](https://github.com/RiktigRefactor/RiktigRefactor.CSharp/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/RiktigRefactor/RiktigRefactor.CSharp/actions/workflows/build-and-test.yml)
+![Status: early development](https://img.shields.io/badge/status-early%20development-orange)
 
-Behavior-preserving refactorings for C#, built on Roslyn.
-
-*Riktig* (Swedish/Norwegian) means correct.
+Seriously safe behavior-preserving refactorings for C#.
+*Riktig* means "correct" in Swedish/Norwegian.
 When the tool cannot prove a transformation is safe, it refuses with a clear reason instead of guessing.
 
 This is the C# implementation of the [RiktigRefactor specification](https://github.com/RiktigRefactor/riktigrefactor.spec).
-The specification defines the correctness model, the refactorings, the JSON protocol, and the test format.
+
+<!-- toc -->
+## Contents
+
+  * [What it can do](#what-it-can-do)
+    * [Rename](#rename)
+    * [Extract IIFE](#extract-iife)
+    * [Make method static](#make-method-static)
+    * [Move static member](#move-static-member)
+    * [Move static method to instance method](#move-static-method-to-instance-method)
+  * [Using it](#using-it)
+  * [Building and testing](#building-and-testing)
+  * [Contributing](#contributing)<!-- endToc -->
 
 ## What it can do
 
 The tool has five refactorings: Rename, Extract IIFE, Make method static, Move static member, and Move static method to instance method.
 
+### Rename
+
 Rename renames a symbol and every reference to it across a whole solution or project.
 
-After Roslyn computes the rename, the tool re-binds the result and checks that no reference changed which symbol it binds to.
-It refuses (exit code 1) when it can't prove the rename preserves behavior.
-
-Extract IIFE (also called extract static lambda) wraps a selected expression, or whole statements of one block, in an immediately-invoked `static` lambda:
+#### Before
 
 ```csharp
-// Before
-var total = price * qty;
-
-// After
-var total = ((Func<decimal, int, decimal>)(static (price, qty) => price * qty))(price, qty);
+class Order
+{
+    int qty;
+    int Total() => qty * 2;
+}
 ```
 
-Variables from outside become parameters, and `this` becomes a parameter named `@this`.
-Variables the statements assign and the code after them reads, or declare and the code after them uses, are returned in a tuple and assigned at the call site.
-It refuses when it can't prove that wrapping keeps behavior.
-After extracting, it checks that the result compiles and that every name binds as before.
-
-Make method static turns an instance method into a static method on the same type, with the receiver as a new first parameter, and rewrites every call:
+#### After
 
 ```csharp
-// Before
-public decimal Total(int qty) => price * qty;
-var t = order.Total(3);
-
-// After
-public static decimal Total(Order order, int qty) => order.price * qty;
-var t = Order.Total(order, 3);
+class Order
+{
+    int quantity;
+    int Total() => quantity * 2;
+}
 ```
 
-A struct receiver is passed by `ref`, or by `in` when the method is `readonly` or the struct is a `readonly struct`.
-It refuses when it can't prove that every call keeps its behavior.
+See more details in [docs/rename.md](docs/rename.md).
+
+### Extract IIFE
+
+Extract IIFE (also called extract static lambda) wraps a selected expression, or whole statements of one block, in an immediately-invoked `static` lambda.
+
+See more details in [docs/extract-iife.md](docs/extract-iife.md).
+
+### Make method static
+
+Make method static turns an instance method into a static method on the same type, with the receiver as a new first parameter, and rewrites every call.
+
+See more details in [docs/make-method-static.md](docs/make-method-static.md).
+
+### Move static member
 
 Move static member moves a static method (including an extension method), field, property, event or constant to another class, struct or record in the same project, and updates every reference.
-References written through the source type, a subclass, or `using static`, and unqualified ones inside the source, become `Target.Member`.
-Names in the moved declaration that were found through the source's scope are qualified, such as `Source.Rate`.
-It refuses when it can't prove that the move keeps behavior, including static initialization order.
 
-Move static method to instance method is the inverse of Make method static: a parameter of a class type becomes the receiver, the method moves into that class, and every call passes the argument as the receiver:
+See more details in [docs/move-static-member.md](docs/move-static-member.md).
 
-```csharp
-// Before
-public static class Pricing { public static decimal Total(Order order, int qty) => order.Price * qty; }
-var t = Pricing.Total(order, 3);
+### Move static method to instance method
 
-// After
-public class Order { public decimal Total(int qty) => this.Price * qty; }
-var t = order.Total(3);
-```
+Move static method to instance method is the inverse of Make method static: a parameter of a class type becomes the receiver, the method moves into that class, and every call passes the argument as the receiver.
 
-It refuses when it can't prove that every call keeps its behavior, including when a receiver might be null or would be evaluated earlier.
+See more details in [docs/move-to-instance-method.md](docs/move-to-instance-method.md).
 
-Each refusal has a code, listed in [refusal-codes.md](refusal-codes.md).
+## Using it
 
-See [limitations](https://github.com/RiktigRefactor/riktigrefactor.spec/blob/main/limitations.md) for what is out of scope, such as reflection, serialization by name, and updating comments and strings.
-Rename warns when a string literal equals the old name.
-
-## Command line
-
-Install the tool:
+The package is not published yet; run it from a clone:
 
 ```shell
-dotnet tool install --global RiktigRefactor.CSharp.Tool
+dotnet run --project RiktigRefactor.CSharp.Tool -- rename --workspace App.sln --file src/Foo.cs --at 12:5 --new-name count
 ```
 
-The package is not published yet.
-Until then, run it from a clone with `dotnet run --project RiktigRefactor.CSharp.Tool --`.
+See [the command line](docs/command-line.md) for the options, exit codes and refusal codes.
 
-Preview a rename as a diff:
+## Building and testing
+
+Install [Git](https://git-scm.com/) and [Mise](https://mise.jdx.dev/); Mise provides everything else.
 
 ```shell
-riktig-cs rename --workspace App.sln --file src/Foo.cs --at 12:5 --new-name count
+./build-and-test
 ```
 
-Positions are 1-based, and columns count Unicode scalar values.
-`--workspace` accepts a `.sln`, `.slnx`, or `.csproj`.
-
-- `--apply` writes the changes to disk.
-- `--json` prints the result using the shared protocol, without the diff.
-
-Preview an Extract IIFE of the text from line 12, column 19 up to (not including) column 30:
-
-```shell
-riktig-cs extract-iife --workspace App.sln --file src/Foo.cs --from 12:19 --to 12:30
-```
-
-Make the method at line 5, column 20 static, naming its receiver parameter `self`:
-
-```shell
-riktig-cs make-method-static --workspace App.sln --file src/Order.cs --at 5:20 --receiver-name self
-```
-
-Move the static member at line 8, column 27 to `Shop.Pricing`:
-
-```shell
-riktig-cs move-static-member --workspace App.sln --file src/Order.cs --at 8:27 --target Shop.Pricing
-```
-
-Make the static method at line 3, column 27 an instance method on its `order` parameter's type:
-
-```shell
-riktig-cs move-to-instance-method --workspace App.sln --file src/Pricing.cs --at 3:27 --receiver order
-```
-
-The workspace must be restored (`dotnet restore`) so that types resolve; otherwise the tool refuses.
-
-The exit code is 0 on success, 1 when the refactoring is refused, and 2 on an error such as an unknown file.
-
-## Build and test
-
-Run `./build-and-test` on Linux or macOS, or `build-and-test.cmd` on Windows (it needs Git for Windows).
-It checks formatting and runs every test.
-Run `./tidy-code` to format the code.
-
-Test cases live in `RiktigRefactor.CSharp.Tests/Cases`, in the [format defined by the specification](https://github.com/RiktigRefactor/riktigrefactor.spec/blob/main/test-format.md).
-Every input and expected program is compiled and run, and edge cases must fail under a deliberately naive implementation.
-
-### Citing the C# specification
-
-Every test case lists the language-specification sections it covers in its `spec` field, written as `C# spec §<number> <title>`, for example `C# spec §12.6.4 Overload resolution`.
-The numbers and titles follow the C# standard draft published at [learn.microsoft.com](https://learn.microsoft.com/dotnet/csharp/language-reference/language-specification/), which comes from the [csharpstandard](https://github.com/dotnet/csharpstandard) repository, at its `alpha-v13` branch, which is the one learn.microsoft.com currently renders from (see the `original_content_git_url` metadata on those pages).
-Features that are not in the standard yet are cited as `C# feature: <name>`.
+See [building and testing](docs/building-and-testing.md) for the toolchain, the test cases, and how they cite the C# specification.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit message convention.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the commit message convention, and [AGENTS.md](AGENTS.md) for how the repo is organized.

@@ -1,0 +1,14 @@
+[tools]
+# The SDK is pinned by global.json; the projects target net10.0, so its runtime is needed too.
+dotnet = ["11.0.100", "10"]
+
+[tasks.mdsnippets]
+description = "Update snippets and the table of contents in markdown files"
+run = ["dotnet tool restore", "dotnet mdsnippets"]
+
+[tasks.build-and-test]
+description = "Build and run all tests"
+run = [
+  "dotnet build",
+  "dotnet test",
+]
