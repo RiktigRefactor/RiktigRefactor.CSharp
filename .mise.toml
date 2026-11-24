@@ -1,3 +1,7 @@
+[settings]
+# Two .NET versions install into the same directory, and parallel installs collide.
+jobs = 1
+
 [tools]
 # The SDK is pinned by global.json; the projects target net10.0, so its runtime is needed too.
 dotnet = ["11.0.100", "10"]
