@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using RiktigRefactor.CSharp.Rename;
@@ -35,14 +35,14 @@ public class LanguageServer
     /// <summary>Serves requests until the client sends <c>exit</c> or closes the stream. Returns the process exit code the LSP specification asks for.</summary>
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
-        while (await this.ReadMessageAsync(cancellationToken).ConfigureAwait(false) is { } message)
+        while (await ReadMessageAsync(cancellationToken).ConfigureAwait(false) is { } message)
         {
             if (message["method"]?.GetValue<string>() == "exit")
             {
                 return this._shutdownRequested ? 0 : 1;
             }
 
-            await this.HandleAsync(message, cancellationToken).ConfigureAwait(false);
+            await HandleAsync(message, cancellationToken).ConfigureAwait(false);
         }
 
         return 1;
@@ -64,20 +64,20 @@ public class LanguageServer
 
         try
         {
-            var result = await this.HandleRequestAsync(method, message["params"], cancellationToken).ConfigureAwait(false);
-            await this.WriteMessageAsync(new JsonObject { ["jsonrpc"] = "2.0", ["id"] = id, ["result"] = result }).ConfigureAwait(false);
+            var result = await HandleRequestAsync(method, message["params"], cancellationToken).ConfigureAwait(false);
+            await WriteMessageAsync(new JsonObject { ["jsonrpc"] = "2.0", ["id"] = id, ["result"] = result }).ConfigureAwait(false);
         }
         catch (LanguageServerException exception)
         {
-            await this.WriteErrorAsync(id, exception.Code, exception.Message).ConfigureAwait(false);
+            await WriteErrorAsync(id, exception.Code, exception.Message).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is WorkspaceLoadException or ArgumentException or IOException or UnauthorizedAccessException)
         {
-            await this.WriteErrorAsync(id, InternalError, exception.Message).ConfigureAwait(false);
+            await WriteErrorAsync(id, InternalError, exception.Message).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            await this.WriteErrorAsync(id, InternalError, $"Internal error: {exception}").ConfigureAwait(false);
+            await WriteErrorAsync(id, InternalError, $"Internal error: {exception}").ConfigureAwait(false);
         }
     }
 
@@ -90,10 +90,10 @@ public class LanguageServer
 
         return method switch
         {
-            "initialize" => Task.FromResult<JsonNode?>(this.Initialize(parameters)),
-            "shutdown" => Task.FromResult<JsonNode?>(this.Shutdown()),
+            "initialize" => Task.FromResult<JsonNode?>(Initialize(parameters)),
+            "shutdown" => Task.FromResult(Shutdown()),
             "textDocument/codeAction" => Task.FromResult<JsonNode?>(CodeActions(parameters)),
-            "workspace/executeCommand" => this.ExecuteCommandAsync(parameters, cancellationToken),
+            "workspace/executeCommand" => ExecuteCommandAsync(parameters, cancellationToken),
             _ => throw new LanguageServerException(MethodNotFound, $"Unsupported request {method}."),
         };
     }
@@ -179,7 +179,7 @@ public class LanguageServer
             throw new LanguageServerException(InvalidRequest, $"Unsupported refactoring {refactoring}.");
         }
 
-        return await this.RenameAsync(request, cancellationToken).ConfigureAwait(false);
+        return await RenameAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
     async Task<JsonNode?> RenameAsync(JsonNode request, CancellationToken cancellationToken)
@@ -202,7 +202,7 @@ public class LanguageServer
     async Task<JsonNode?> ReadMessageAsync(CancellationToken cancellationToken)
     {
         var contentLength = -1;
-        while (await this.ReadHeaderLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+        while (await ReadHeaderLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
         {
             if (line.Length == 0)
             {
@@ -244,7 +244,7 @@ public class LanguageServer
     }
 
     Task WriteErrorAsync(JsonNode id, int code, string message)
-        => this.WriteMessageAsync(new JsonObject
+        => WriteMessageAsync(new JsonObject
         {
             ["jsonrpc"] = "2.0",
             ["id"] = id,
