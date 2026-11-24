@@ -118,7 +118,15 @@ convertToInstanceMethodCommand.SetAction((parseResult, cancellationToken) => Con
     Console.Error,
     cancellationToken));
 
-var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { renameCommand, extractIifeCommand, makeMethodStaticCommand, moveStaticMemberCommand, convertToInstanceMethodCommand };
+var languageServerCommand = new Command("lsp", "Run a language server on standard input and output, for editors. It offers Rename as a code action.");
+languageServerCommand.SetAction(async (parseResult, cancellationToken) =>
+{
+    await using var input = Console.OpenStandardInput();
+    await using var output = Console.OpenStandardOutput();
+    return await new LanguageServer(input, output).RunAsync(cancellationToken);
+});
+
+var rootCommand = new RootCommand("Behavior-preserving C# refactorings.") { languageServerCommand, renameCommand, extractIifeCommand, makeMethodStaticCommand, moveStaticMemberCommand, convertToInstanceMethodCommand };
 var parseResult = rootCommand.Parse(args);
 var exitCode = await parseResult.InvokeAsync();
 return parseResult.Errors.Count > 0 ? RefactoringCommand.ExitError : exitCode;

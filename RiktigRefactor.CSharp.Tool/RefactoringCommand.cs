@@ -14,7 +14,7 @@ public static class RefactoringCommand
     public const int ExitRefused = 1;
     public const int ExitError = 2;
 
-    static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    internal static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -54,10 +54,7 @@ public static class RefactoringCommand
         CancellationToken cancellationToken)
     {
         var solution = await WorkspaceLoader.LoadAsync(Path.GetFullPath(arguments.Workspace), cancellationToken).ConfigureAwait(false);
-        var fullPath = Path.GetFullPath(arguments.File);
-        var document = solution.Projects.SelectMany(project => project.Documents)
-            .FirstOrDefault(candidate => candidate.FilePath is { } path && Path.GetFullPath(path) == fullPath)
-            ?? throw new ArgumentException($"`{arguments.File}` is not part of the workspace.");
+        var document = FindDocument(solution, arguments.File);
 
         var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
         var result = await refactor(document, text, cancellationToken).ConfigureAwait(false);
@@ -84,7 +81,15 @@ public static class RefactoringCommand
         return ExitSuccess;
     }
 
-    static string WorkspaceRootOf(string workspace) => Path.GetDirectoryName(Path.GetFullPath(workspace))!;
+    internal static Document FindDocument(Solution solution, string file)
+    {
+        var fullPath = Path.GetFullPath(file);
+        return solution.Projects.SelectMany(project => project.Documents)
+            .FirstOrDefault(candidate => candidate.FilePath is { } path && Path.GetFullPath(path) == fullPath)
+            ?? throw new ArgumentException($"`{file}` is not part of the workspace.");
+    }
+
+    internal static string WorkspaceRootOf(string workspace) => Path.GetDirectoryName(Path.GetFullPath(workspace))!;
 
     public static Position ParsePosition(string at)
     {
