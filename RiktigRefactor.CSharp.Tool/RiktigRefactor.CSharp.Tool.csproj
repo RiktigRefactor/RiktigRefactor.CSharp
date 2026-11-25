@@ -7,6 +7,9 @@
     <ToolCommandName>riktig-cs</ToolCommandName>
     <PackageId>RiktigRefactor.CSharp.Tool</PackageId>
     <Description>Behavior-preserving C# refactorings. Refuses when it cannot prove a change is safe.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/RiktigRefactor/RiktigRefactor.CSharp</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
     <ProjectReference Include="..\RiktigRefactor.CSharp\RiktigRefactor.CSharp.csproj" />
   </ItemGroup>
 
